@@ -5,6 +5,10 @@ import {
   PROVIDERS,
   resolveProviderBaseUrl,
 } from "./providers";
+import {
+  getOpenAICompatibleBaseUrlCandidates,
+  isOpenAIEndpointNotFoundError,
+} from "./openAICompatibleEndpoints";
 
 interface ModelCacheItem {
   models: string[];
@@ -19,6 +23,21 @@ interface GetProviderModelsOptions {
   fallbackModel?: string;
   fallbackModels?: string[];
   includeBuiltInFallback?: boolean;
+}
+
+export interface ProviderModelRefreshResult {
+  models: string[];
+  catalogAvailable: boolean;
+}
+
+class ModelCatalogHttpError extends Error {
+  readonly status: number;
+
+  constructor(status: number, detail: string) {
+    super(`拉取模型列表失败（${status}）：${detail || "未知错误"}`);
+    this.name = "ModelCatalogHttpError";
+    this.status = status;
+  }
 }
 
 const MODEL_CACHE_TTL_MS = 30 * 60 * 1000;
@@ -100,13 +119,37 @@ async function fetchJson(url: string, init: RequestInit): Promise<unknown> {
 
     if (!response.ok) {
       const detail = await response.text();
-      throw new Error(`拉取模型列表失败（${response.status}）：${detail || "未知错误"}`);
+      throw new ModelCatalogHttpError(response.status, detail);
     }
 
     return response.json();
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function fetchOpenAICompatibleModelPayload(
+  baseURL: string,
+  headers: Record<string, string>,
+): Promise<unknown> {
+  const candidates = getOpenAICompatibleBaseUrlCandidates(baseURL);
+  let lastError: unknown = null;
+
+  for (const candidate of candidates) {
+    try {
+      return await fetchJson(`${candidate}/models`, {
+        method: "GET",
+        headers,
+      });
+    } catch (error) {
+      lastError = error;
+      if (!isOpenAIEndpointNotFoundError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError ?? new Error("模型列表接口不可用。");
 }
 
 function buildHeaders(provider: LLMProvider, apiKey?: string): Record<string, string> {
@@ -146,11 +189,8 @@ async function fetchOllamaModels(baseURL: string): Promise<string[]> {
     // Fall back to the OpenAI-compatible models endpoint.
   }
 
-  const payload = await fetchJson(`${baseURL}/models`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
+  const payload = await fetchOpenAICompatibleModelPayload(baseURL, {
+    Accept: "application/json",
   });
   const models = parseModelIds(payload);
   if (models.length === 0) {
@@ -172,10 +212,10 @@ async function fetchProviderModels(
     return fetchOllamaModels(baseURL);
   }
 
-  const payload = await fetchJson(`${baseURL}/models`, {
-    method: "GET",
-    headers: buildHeaders(provider, apiKey),
-  });
+  const payload = await fetchOpenAICompatibleModelPayload(
+    baseURL,
+    buildHeaders(provider, apiKey),
+  );
 
   const models = parseModelIds(payload);
   if (models.length === 0) {
@@ -222,4 +262,30 @@ export async function refreshProviderModels(
 ): Promise<string[]> {
   const models = await fetchProviderModels(provider, apiKey?.trim(), baseURL);
   return setCachedModels(provider, models, baseURL);
+}
+
+export async function refreshProviderModelsWithFallback(
+  provider: LLMProvider,
+  apiKey?: string,
+  baseURL?: string,
+  fallbackModels: string[] = [],
+): Promise<ProviderModelRefreshResult> {
+  try {
+    return {
+      models: await refreshProviderModels(provider, apiKey, baseURL),
+      catalogAvailable: true,
+    };
+  } catch (error) {
+    if (!isOpenAIEndpointNotFoundError(error)) {
+      throw error;
+    }
+    const models = getFallbackModels(provider, { fallbackModels });
+    if (models.length === 0) {
+      throw new Error("厂商未提供模型列表接口，请手动填写默认模型。");
+    }
+    return {
+      models: setCachedModels(provider, models, baseURL),
+      catalogAvailable: false,
+    };
+  }
 }

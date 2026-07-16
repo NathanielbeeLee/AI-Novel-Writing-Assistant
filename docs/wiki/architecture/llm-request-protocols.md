@@ -15,7 +15,9 @@
 | `openai_compatible` | `POST {BaseURL}/chat/completions` | OpenAI-compatible Chat Completions |
 | `anthropic` | Anthropic Messages 调用 | Anthropic 官方或兼容服务 |
 
-BaseURL 通常应包含版本根路径，例如 `https://api.openai.com/v1`。因此界面常把最终路径写成 `/v1/responses` 或 `/v1/chat/completions`。
+BaseURL 可以是域名根地址，也可以包含版本根路径，例如 `https://api.openai.com/v1`。当未带版本路径的 BaseURL 在 Responses 或 Chat Completions 端点明确返回 404/405 时，客户端会追加 `/v1` 重试一次；成功后，该客户端实例会继续使用已确认的版本路径。
+
+这只是同一协议的路径兼容，不是跨协议重试。401、429、超时、5xx 和已经开始返回内容的请求不会触发路径重放，避免正式生成被重复执行。
 
 ## 解析优先级
 
@@ -109,7 +111,7 @@ GET {BaseURL}/models
 Authorization: Bearer <API Key>
 ```
 
-系统读取 `data[].id`，填入可搜索模型列表，并默认选择第一个模型。服务不提供 `/models`、返回非标准格式或权限不足时，用户仍可手动填写模型名称。
+系统先按填写地址读取 `data[].id`；地址未带版本路径且 `/models` 返回 404/405 时，再尝试 `/v1/models`。服务完全不提供模型目录时，刷新操作会保留已手动填写的模型并给出说明；返回非标准格式或权限不足时仍会报出实际错误，不能把认证问题伪装成目录缺失。
 
 模型列表成功只证明目录端点可用，不证明该模型支持 Responses、结构化输出或长文本。保存前仍应运行连接测试。
 
@@ -153,7 +155,7 @@ API Key：CLIProxyAPI 配置的 Key
 
 ### `/responses` 返回 404
 
-- 确认 BaseURL 是否已经以 `/v1` 结尾。
+- 未带版本路径的 BaseURL 会自动再试 `/v1/responses`；查看最终错误是否来自该路径。
 - 确认网关版本是否真正提供 Responses。
 - 明确切换到 Chat Completions 后重新测试；不要只改模型名。
 
@@ -164,9 +166,15 @@ API Key：CLIProxyAPI 配置的 Key
 
 ### 模型列表为空
 
-- 用相同 BaseURL 和 Key 检查 `GET /models`。
+- 用相同 BaseURL 和 Key 检查 `GET /models` 与必要时的 `GET /v1/models`。
 - 检查 Key 是否有列举模型权限。
-- 如果服务不实现模型目录，直接手动填写模型 id。
+- 如果服务不实现模型目录，直接手动填写模型 id；正文生成并不依赖必须列出模型。
+
+### 404 被显示为 `MODEL_NOT_FOUND`
+
+- LangChain 会把所有 HTTP 404 统一附加 `MODEL_NOT_FOUND` 排障标签，404 也可能来自不存在的 `/responses`、`/chat/completions` 或 `/models` 路径。
+- 系统只对未带版本路径的 BaseURL 追加 `/v1` 重试；如果两条路径都返回 404，再核对网关文档中的 API 根路径和模型 id。
+- 不要因这个标签改 Key；401 才是凭据问题，429 是额度或限流问题。
 
 ### 普通调用成功、结构化失败
 
@@ -204,6 +212,7 @@ API Key：CLIProxyAPI 配置的 Key
 - 协议解析：`server/src/llm/protocols/requestProtocol.ts`
 - 强制 OpenAI 协议客户端：`server/src/llm/protocols/OpenAIProtocolClient.ts`
 - Responses 兼容 payload 归一化：`server/src/llm/protocols/responsesCompatibility.ts`
+- OpenAI-compatible BaseURL 候选与 404/405 判定：`server/src/llm/openAICompatibleEndpoints.ts`
 - 厂商/路由/调用优先级：`server/src/llm/factory.ts`
 - 连接与结构化探针：`server/src/llm/connectivity.ts`
 - 模型路由：`server/src/llm/modelRouter.ts`
