@@ -34,6 +34,7 @@
 - [Prompt Workbench, Context and Step Runtime Plan](./plans/prompt-workbench-context-and-step-runtime-plan.md)
 - [Auto Director Execution Plane Isolation Plan](./plans/auto-director-execution-plane-isolation-plan.md)
 - [Director Mode Module and State Refactor Checklist](./plans/director-mode-module-state-refactor-checklist.md)
+- [Responses API 与 Chat Completions 双协议接入计划](./plans/responses-api-integration-plan.md)
 
 ### `docs/design`
 
