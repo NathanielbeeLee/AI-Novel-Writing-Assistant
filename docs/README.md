@@ -35,6 +35,9 @@
 - [Auto Director Execution Plane Isolation Plan](./plans/auto-director-execution-plane-isolation-plan.md)
 - [Director Mode Module and State Refactor Checklist](./plans/director-mode-module-state-refactor-checklist.md)
 - [Responses API 与 Chat Completions 双协议接入计划](./plans/responses-api-integration-plan.md)
+- [读者体验合同闭环：第一阶段实施方案](./plans/reader-experience-contract-phase-one.md)
+- [Payoff Ledger 基础加固：第二阶段实施方案](./plans/payoff-ledger-foundation-phase-two.md)
+- [P0 基础安全闭环：幽灵承诺与重规划闸门](./plans/payoff-ledger-safety-phase-three.md)
 
 ### `docs/design`
 
@@ -70,8 +73,11 @@ Wiki 不替代计划、检查点或发布说明：
 - [Wiki Entry Template](./wiki/entry-template.md)
 - [Module Boundaries](./wiki/architecture/module-boundaries.md)
 - [LLM 请求协议、厂商配置与探针规则](./wiki/architecture/llm-request-protocols.md)
+- [定制分支与上游同步规则](./wiki/architecture/customization-branch-sync.md)
 - [Auto Director Runtime](./wiki/workflows/auto-director-runtime.md)
+- [LLM 实况执行与任务可见性](./wiki/workflows/llm-live-execution.md)
 - [Chapter Production Chain](./wiki/workflows/chapter-production-chain.md)
+- [整书质量闭环](./wiki/workflows/whole-book-quality-loop.md)
 - [Prompt Registry and Structured Output](./wiki/prompts/prompt-registry-and-structured-output.md)
 
 ### `docs/releases`

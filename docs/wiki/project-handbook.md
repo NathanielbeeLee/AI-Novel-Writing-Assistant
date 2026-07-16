@@ -24,6 +24,10 @@
 | 指定某章让 AI 修改 | 是 | 章节编辑器支持整章或选区、自然语言要求、候选对比、快照和应用 |
 | 在 Creative Hub 点名章节修改 | 是 | 可按章节序号读取、预览 diff，并经审批应用章节补丁 |
 | 自动设计伏笔并跟踪兑现 | 是 | 故事宏观、卷/章规划、状态快照与 payoff ledger 共同管理 |
+| 查看 AI 当前在做什么 | 是 | 顶部“AI 实况”展示生成、校验和修复过程；正式保存结果仍以任务和资产状态为准 |
+| 与角色讨论其选择 | 是 | 小说角色可基于正史和主观思路线对话；经作者确认的影响只作为后续有限章节的软引导 |
+| 整书审校与批量润色 | 是 | 审校先形成带章节证据的报告；建议经采用后进入后续约束，润色复用可恢复的章节生产链 |
+| 统一管理创作与视觉资产 | 是 | 统一资产中心负责文字资产入口，视觉资源库聚合可复用图片；各资产仍由原业务模块维护 |
 | 自动几十或几百章 | 是 | 可按全书、卷或章节范围执行；每章保存、审核、回灌后再进入下一章 |
 | 百万字长篇 | 架构上支持 | 不是把百万字塞进一次 Prompt；依赖分层规划、状态账本、摘要、RAG、分批执行和恢复 |
 | 从头到尾必须一直聊天 | 否，也不应如此 | 先讨论和确认方向，之后可后台自动化；命中检查点或用户想改动时再介入 |
@@ -163,11 +167,15 @@ Creative Hub 可讨论：
 
 ### 5.3 世界
 
-世界资产保存规则、地点、势力、资源与冲突边界。章节上下文只抽取本章相关世界切片，避免把整个世界库每次塞进 Prompt。
+世界资产保存规则、地点、势力、资源与冲突边界。自动导演把“本书世界准备”放在书契约之后、角色准备之前：可以选用世界样本、让 AI 根据当前小说生成，或对轻设定作品明确跳过。章节上下文只抽取本章相关世界切片，避免把整个世界库每次塞进 Prompt。
+
+小说内生成的本书世界与外部世界库不是同一个事实边界。后续规划和正文以当前小说绑定的世界实例为准；复用、同步或跳过都应在世界观准备页显式完成，不要只在 Creative Hub 聊天中口头约定。
 
 ### 5.4 角色
 
-角色准备包含核心角色、候选阵容、关系和职责。运行中还会维护角色位置、目标、关系、能力、信息边界与资源变化。
+角色准备包含核心角色、候选阵容、关系、职责和重要度。`lead`（核心主角）、`major`（主要角色）、`named`（具名配角）、`extra`（临时角色）用来控制长篇上下文优先级；它描述全书持续影响，不代表某一章的即时戏份。
+
+运行中还会维护角色位置、目标、关系、能力、信息边界与资源变化。角色工作台额外提供两类非正史创作资产：思路线记录角色当前理解、意图和可能误判；角色对话允许作者试探或影响角色。只有作者确认的对话影响才会在有限章节内作为软引导进入正文，它不能覆盖正史硬事实，也不会直接强迫剧情发生。
 
 基础角色库适合跨书模板；本书正式角色和状态才是当前故事事实源。不要把基础模板误当成本书已经发生的角色变化。
 
@@ -204,6 +212,23 @@ Creative Hub 可讨论：
 章节稳定后，统一 artifact delta 会回灌摘要、事实、状态、角色资源、关系、信息边界和 payoff delta。高风险、卷尾、周期节点或 strict 模式再做全量伏笔校准。
 
 这套机制能降低遗忘概率，但不能保证任何模型都能完美处理数百章伏笔。重要伏笔仍建议指定目标窗口、定期检查账本，并在卷尾审计。
+
+### 6.1 整书审校、建议采用与批量润色
+
+单章审核不适合判断跨几十章的人设漂移、因果断裂、节奏失衡和伏笔遗忘。整书审校按范围读取分段证据，每个问题都必须定位章节；报告本身只是诊断资产，不会自动改正文或污染后续上下文。
+
+推荐顺序：
+
+```text
+选择已写章节范围
+  -> 生成整书审校报告
+  -> 阅读问题、章节证据和建议
+  -> 只采用确认无误的建议
+  -> 让后续章节读取已采用约束
+  -> 必要时对明确范围启动批量润色
+```
+
+批量润色以 `polish` 模式复用现有章节 pipeline、运行前快照、质检、轻修和恢复点，不是另一套无法追踪的正文生成器。第一次使用应先选少量章节，检查快照、风格保持和后续资产回灌，再扩大范围。详细边界见[整书质量闭环](./workflows/whole-book-quality-loop.md)。
 
 ## 7. 自动几十章、几百章和百万字的实现方式
 
@@ -257,6 +282,7 @@ Pipeline 支持 `startOrder` 与 `endOrder`，自动导演还支持：
 flowchart LR
   U[用户 / 章节编辑器 / Creative Hub] --> C[Web 客户端]
   C --> A[Express API 控制面]
+  C --> V[AI 实况 SSE 订阅]
   A --> H[Creative Hub + Agent Tools]
   A --> D[自动导演 Commands / Projection]
   A --> R[统一章节 Runtime]
@@ -266,6 +292,7 @@ flowchart LR
   H --> R
   R --> P[Prompt Registry + Context Broker]
   P --> L[LLM 工厂与协议适配]
+  L --> V
   L --> X[Responses / Chat Completions / Anthropic]
   R --> S[(SQLite / PostgreSQL)]
   R --> Q[(Qdrant 可选)]
@@ -276,6 +303,7 @@ flowchart LR
 关键边界：
 
 - Web API 接受命令并返回轻量状态，不应同步等待整本长任务。
+- AI 实况只展示模型调用过程；SSE 断开或关闭窗口不应中断服务端任务，未校验输出也不是已保存正文。
 - 自动导演负责阶段编排，不另造一套正文生成器。
 - 手动单章、批量执行和自动导演最终复用统一章节 runtime。
 - Creative Hub 是控制入口，不是小说事实源。
@@ -322,7 +350,16 @@ flowchart LR
 - 章节编辑器 UI：`client/src/pages/novels/components/chapterEditor/`
 - 章节执行公开说明：[章节执行链](../public/flow/chapter-execution.md)
 
-### 9.4 Prompt、模型和 RAG
+### 9.4 角色、世界与资产
+
+- 本书世界 Gateway：`server/src/services/novel/worldContext/`
+- 世界观准备 UI：`client/src/pages/novels/components/WorldSetupTab.tsx`
+- 角色思路线/对话/影响：`server/src/services/novel/characterMind/`、`characterDialogue/`、`characterInfluence/`
+- 角色工作台 UI：`client/src/pages/novels/components/characterWorkspace/`
+- 统一资产中心：`client/src/pages/assets/`
+- 视觉资源目录：`server/src/modules/visualAssets/`、`client/src/components/visualAssets/`
+
+### 9.5 Prompt、模型和 RAG
 
 - Prompt Registry：`server/src/prompting/registry.ts`
 - 正式 Prompt：`server/src/prompting/prompts/`
@@ -333,7 +370,14 @@ flowchart LR
 - RAG：`server/src/services/rag/`
 - 知识服务：`server/src/services/knowledge/`
 
-### 9.5 数据
+### 9.6 任务与 AI 实况
+
+- 持久任务/运行记录：`server/src/services/task/`、`client/src/pages/tasks/`
+- LLM 实况会话与 SSE：`server/src/platform/llm/live/`
+- 前端实况订阅：`client/src/hooks/useLlmLiveFeed.ts`
+- 全局实况窗口：`client/src/components/liveExecution/LiveExecutionDialog.tsx`
+
+### 9.7 数据
 
 - Prisma schema：`server/src/prisma/schema.sqlite.prisma`、`schema.prisma`
 - SQLite 迁移：`server/src/prisma/migrations.sqlite/`
@@ -473,11 +517,14 @@ pnpm db:studio
 - `novel-custom`：自己的长期定制集成分支；
 - `feature/*`：从 `novel-custom` 创建的单功能分支；
 - 功能通过 PR 合并回 `novel-custom`；
-- 原仓库更新先同步到 `main`，再通过 merge/rebase/PR 引入 `novel-custom`。
+- 原仓库更新先同步到 `main`，再通过 PR 和 merge commit 引入 `novel-custom`；
+- 不把 `novel-custom` 反向合并进 `main`，否则下次同步原仓库时会混入定制历史。
 
 分支属于一个仓库内的不同提交指针，不是“一个分支一个仓库”。同一 fork 可以同时拥有 `main`、`novel-custom` 和多个 feature 分支。
 
 同步前先查看原仓库分支用途。大量 `codex/*` 分支通常是开发/PR 工作分支，不需要全部同步；长期跟踪通常只需要原仓库默认分支，以及项目明确声明的 `beta` 等主开发分支。
+
+发生冲突时，优先保留主线的新模块边界，再把定制能力迁入新的所有者，而不是用旧文件整块覆盖主线。例如 Prompt Registry 已拆成懒加载目录后，应在 loader entries 中登记定制 Prompt；角色工作台重构后，应把重要度控件接入新 Profile Tab。合并后必须同时复查协议路由、双数据库迁移、Prompt 注册、重要度、整书审校、资产路由和文档入口。完整步骤见[定制分支与上游同步规则](./architecture/customization-branch-sync.md)。
 
 ## 15. 向 Codex / 网页版提问的模板
 
@@ -525,6 +572,11 @@ pnpm db:studio
 - 知识与 RAG：[知识库与上下文组装](./rag/knowledge-and-context-assembly.md)。
 - Prompt 与结构化输出：[Prompt Registry 与结构化输出](./prompts/prompt-registry-and-structured-output.md)。
 - 模型/API 协议：[LLM 请求协议、厂商配置与探针规则](./architecture/llm-request-protocols.md)。
+- AI 生成过程是否仍在运行：[LLM 实况执行与任务可见性](./workflows/llm-live-execution.md)。
+- 世界观如何进入自动导演：[自动导演本书世界准备](./workflows/auto-director-world-setup.md)。
+- 角色思路线与角色对话：[角色智能层](./workflows/character-intelligence-layer.md)、[角色对话层](./workflows/character-dialogue-layer.md)。
+- 整书问题如何审校和采用：[整书质量闭环](./workflows/whole-book-quality-loop.md)。
+- fork 如何长期同步上游：[定制分支与上游同步规则](./architecture/customization-branch-sync.md)。
 - 出错如何恢复：[按阶段恢复手册](../public/playbook/recovery-by-phase.md)、[重复故障模式](./debugging/recurring-failure-modes.md)。
 
 ## 17. 维护本手册的规则

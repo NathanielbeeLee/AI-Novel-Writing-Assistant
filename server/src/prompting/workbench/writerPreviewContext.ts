@@ -295,6 +295,7 @@ function buildPreviewGenerationContextPackage(input: {
       sanitizedGenerationProfile: null,
     },
     characterDynamics: null,
+    characterMindStates: [],
     bookContract: null,
     macroConstraints: null,
     volumeWindow: null,
