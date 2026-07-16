@@ -23,6 +23,7 @@ interface CharacterFormState {
   name: string;
   role: string;
   gender: CharacterGender;
+  importanceTier: "lead" | "major" | "named" | "extra";
   personality: string;
   background: string;
   development: string;
@@ -515,6 +516,16 @@ export default function CharacterAssetWorkspace(props: CharacterAssetWorkspacePr
                     <option value="male">性别：男</option>
                     <option value="female">性别：女</option>
                     <option value="other">性别：其他</option>
+                  </SelectControl>
+                  <SelectControl
+                    className="w-full rounded-md border bg-background p-2 text-sm"
+                    value={characterForm.importanceTier}
+                    onChange={(event) => onCharacterFormChange("importanceTier", event.target.value)}
+                  >
+                    <option value="lead">重要度：核心主角（全书持续追踪）</option>
+                    <option value="major">重要度：主要角色（重点保留状态）</option>
+                    <option value="named">重要度：具名配角（按需进入上下文）</option>
+                    <option value="extra">重要度：临时角色（仅保留必要信息）</option>
                   </SelectControl>
                 </div>
                 <div className="grid gap-2 md:grid-cols-2">

@@ -34,6 +34,7 @@ export const MOBILE_ROUTE_PATTERNS: MobileRoutePattern[] = [
   { key: "tasks", pattern: /^\/tasks\/?$/, title: "任务", group: "tasks" },
   { key: "auto-director-follow-ups", pattern: /^\/auto-director\/follow-ups\/?$/, title: "导演跟进", group: "tasks" },
   { key: "knowledge", pattern: /^\/knowledge\/?$/, title: "知识库", group: "more" },
+  { key: "assets", pattern: /^\/assets\/?$/, title: "统一资产中心", group: "more" },
   { key: "genres", pattern: /^\/genres\/?$/, title: "题材基底", group: "more" },
   { key: "story-modes", pattern: /^\/story-modes\/?$/, title: "推进模式", group: "more" },
   { key: "titles", pattern: /^\/titles\/?$/, title: "标题工坊", group: "more" },
@@ -70,6 +71,7 @@ const moreNavGroups: MobileNavGroup[] = [
   {
     title: "资产库",
     items: [
+      { key: "assets", label: "统一资产中心", to: "/assets", group: "more" },
       { key: "knowledge", label: "知识库", to: "/knowledge", group: "more" },
       { key: "genres", label: "题材基底", to: "/genres", group: "more" },
       { key: "story-modes", label: "推进模式", to: "/story-modes", group: "more" },

@@ -430,6 +430,7 @@ export async function persistCharacterCastOptionsDraft(
               role: member.role,
               gender: member.gender,
               castRole: member.castRole,
+              importanceTier: member.importanceTier,
               relationToProtagonist: toOptionalText(member.relationToProtagonist),
               storyFunction: member.storyFunction,
               shortDescription: toOptionalText(member.shortDescription),

@@ -530,6 +530,7 @@ export interface CharacterTabViewProps {
     name: string;
     role: string;
     gender: "male" | "female" | "other" | "unknown";
+    importanceTier: "lead" | "major" | "named" | "extra";
     personality: string;
     background: string;
     development: string;
@@ -547,6 +548,7 @@ export interface CharacterTabViewProps {
       | "name"
       | "role"
       | "gender"
+      | "importanceTier"
       | "personality"
       | "background"
       | "development"

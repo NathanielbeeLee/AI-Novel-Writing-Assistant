@@ -41,6 +41,7 @@ import {
   buildRuntimeCharacterHardFactsList,
   parseCharacterProhibitionsJson,
 } from "../characters/characterHardFacts";
+import { characterImportanceRank } from "../characters/characterImportance";
 import { NovelVolumeService } from "../volume/NovelVolumeService";
 import { ChapterPlanJITService } from "../planning/ChapterPlanJITService";
 import {
@@ -403,6 +404,7 @@ export class GenerationContextAssembler {
         id: item.id,
         name: item.name,
         role: item.role,
+        importanceTier: item.importanceTier as "lead" | "major" | "named" | "extra",
         personality: item.personality ?? null,
         background: item.background ?? null,
         development: item.development ?? null,
@@ -423,7 +425,7 @@ export class GenerationContextAssembler {
         voiceTexture: item.voiceTexture ?? null,
         presenceImpression: item.presenceImpression ?? null,
       };
-    });
+    }).sort((left, right) => characterImportanceRank(left.importanceTier) - characterImportanceRank(right.importanceTier));
     const mappedCharacterHardFacts = buildRuntimeCharacterHardFactsList(
       mappedCharacterRoster,
       pendingCharacterHardFactReviews,

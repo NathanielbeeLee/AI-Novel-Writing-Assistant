@@ -12,6 +12,7 @@ import WorldInjectionHint from "./WorldInjectionHint";
 import { getLowScoreChapterRange, getPipelineStageState, PIPELINE_STAGE_ITEMS } from "./pipelineTab.utils";
 import DirectorTakeoverEntryPanel from "./DirectorTakeoverEntryPanel";
 import SelectControl from "@/components/common/SelectControl";
+import WholeBookReviewPanel from "./WholeBookReviewPanel";
 
 interface PipelineTabProps {
   novelId: string;
@@ -172,6 +173,8 @@ export default function PipelineTab(props: PipelineTabProps) {
         description="AI 会优先判断当前是否有活动中的章节批次或待修检查点，再决定恢复当前修复还是新开批次。"
         entry={directorTakeoverEntry}
       />
+      <Card className="border-primary/30 bg-primary/5"><CardHeader><CardTitle>批量润色</CardTitle></CardHeader><CardContent className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">对所选章节逐章质检并轻量润色；运行前会创建快照，可从任务恢复点继续。</p><Button disabled={isRunningPipeline || maxOrder < 1} onClick={() => onRunPipeline({ runMode: "polish", autoReview: true, autoRepair: true, skipCompleted: false, repairMode: "light_repair", maxRetries: Math.max(1, pipelineForm.maxRetries) })}>开始批量润色</Button></CardContent></Card>
+      <WholeBookReviewPanel novelId={props.novelId} maxOrder={maxOrder} />
       <Card className="border-0 bg-transparent shadow-none">
         <CardHeader className="rounded-2xl bg-muted/20 px-5 py-4">
           <CardTitle>批量生成与质检</CardTitle>

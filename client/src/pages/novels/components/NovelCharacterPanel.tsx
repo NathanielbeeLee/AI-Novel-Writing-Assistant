@@ -43,6 +43,7 @@ interface CharacterFormState {
   name: string;
   role: string;
   gender: CharacterGender;
+  importanceTier: "lead" | "major" | "named" | "extra";
   personality: string;
   background: string;
   development: string;

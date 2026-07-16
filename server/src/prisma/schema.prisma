@@ -594,6 +594,7 @@ model Character {
   role            String
   gender          CharacterGender @default(unknown)
   castRole        String?
+  importanceTier  String   @default("named")
   storyFunction   String?
   relationToProtagonist String?
   personality     String?
@@ -653,6 +654,7 @@ model Character {
   updatedAt       DateTime @updatedAt
 
   @@index([novelId])
+  @@index([novelId, importanceTier])
   @@index([baseCharacterId])
 }
 
@@ -711,6 +713,7 @@ model CharacterCastOptionMember {
   role                  String
   gender                CharacterGender @default(unknown)
   castRole              String
+  importanceTier        String   @default("named")
   relationToProtagonist String?
   storyFunction         String
   shortDescription      String?

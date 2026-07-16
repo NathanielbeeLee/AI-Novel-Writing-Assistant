@@ -101,6 +101,7 @@ export interface CharacterInput {
   role: string;
   gender?: "male" | "female" | "other" | "unknown";
   castRole?: string;
+  importanceTier?: "lead" | "major" | "named" | "extra";
   storyFunction?: string;
   relationToProtagonist?: string;
   personality?: string;

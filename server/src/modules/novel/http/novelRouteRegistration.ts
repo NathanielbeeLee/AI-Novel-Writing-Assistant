@@ -21,6 +21,7 @@ import { registerNovelWorldSliceRoutes } from "../setup/http/novelWorldSliceRout
 import novelChapterSummaryRouter from "../production/http/novelChapterSummary";
 import novelDecisionsRouter from "../state/http/novelDecisions";
 import type { NovelHttpServices } from "./novelHttpServices";
+import { registerWholeBookReviewRoutes } from "../quality/http/wholeBookReviewRoutes";
 import {
   aiRevisionPreviewSchema,
   arcPlanParamsSchema,
@@ -73,7 +74,8 @@ function forwardBusinessError(error: unknown, next: (err?: unknown) => void): bo
 }
 
 export function registerNovelHttpRoutes(router: Router, services: NovelHttpServices): void {
-  const { novelService, novelDraftOptimizeService } = services;
+  const { novelService, novelDraftOptimizeService, wholeBookReviewService } = services;
+  registerWholeBookReviewRoutes(router, wholeBookReviewService);
 
   registerNovelBaseRoutes({
     router,

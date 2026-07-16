@@ -326,6 +326,14 @@ const promptAssetLoaderEntries: PromptAssetLoaderEntry[] = [
     load: () => require("./prompts/novel/characterPreparation.prompts").characterCastOptionPrompt as UnknownPromptAsset,
   },
   {
+    key: "novel.review.book_range@v1",
+    load: () => require("./prompts/novel/wholeBookReview.prompts").wholeBookRangeReviewPrompt as UnknownPromptAsset,
+  },
+  {
+    key: "novel.review.book_synthesis@v1",
+    load: () => require("./prompts/novel/wholeBookReview.prompts").wholeBookReviewPrompt as UnknownPromptAsset,
+  },
+  {
     key: "novel.character.castOptions.repair@v1",
     load: () => require("./prompts/novel/characterPreparation.prompts").characterCastOptionRepairPrompt as UnknownPromptAsset,
   },

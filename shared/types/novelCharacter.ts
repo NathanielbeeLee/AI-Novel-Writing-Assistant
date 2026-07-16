@@ -11,6 +11,7 @@ export type CharacterCastRole =
   | "catalyst";
 
 export type CharacterGender = "male" | "female" | "other" | "unknown";
+export type CharacterImportanceTier = "lead" | "major" | "named" | "extra";
 
 export interface CharacterHardFacts {
   identityLabel?: string | null;
@@ -30,6 +31,7 @@ export interface Character {
   role: string;
   gender?: CharacterGender | null;
   castRole?: CharacterCastRole | null;
+  importanceTier?: CharacterImportanceTier;
   storyFunction?: string | null;
   relationToProtagonist?: string | null;
   personality?: string | null;
@@ -158,6 +160,7 @@ export interface CharacterCastOptionMember {
   role: string;
   gender: CharacterGender;
   castRole: CharacterCastRole;
+  importanceTier?: CharacterImportanceTier;
   relationToProtagonist?: string | null;
   storyFunction: string;
   shortDescription?: string | null;
@@ -299,6 +302,7 @@ export interface SupplementalCharacterCandidate {
   role: string;
   gender: CharacterGender;
   castRole: CharacterCastRole;
+  importanceTier: CharacterImportanceTier;
   summary: string;
   storyFunction: string;
   relationToProtagonist?: string | null;

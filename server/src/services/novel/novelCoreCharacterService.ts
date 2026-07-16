@@ -14,6 +14,7 @@ import {
   LLMGenerateOptions,
 } from "./novelCoreShared";
 import { serializeCharacterProhibitions } from "./characters/characterHardFacts";
+import { inferCharacterImportanceTier } from "./characters/characterImportance";
 
 export class NovelCoreCharacterService {
   private readonly worldContextGateway = new WorldContextGateway();
@@ -45,6 +46,7 @@ export class NovelCoreCharacterService {
       data: {
         novelId,
         ...data,
+        importanceTier: inferCharacterImportanceTier(data.importanceTier, data.castRole),
         ...(prohibitions ? { prohibitionsJson: serializeCharacterProhibitions(prohibitions) } : {}),
       },
     });
@@ -68,6 +70,9 @@ export class NovelCoreCharacterService {
       where: { id: characterId },
       data: {
         ...data,
+        ...((input.importanceTier !== undefined || input.castRole !== undefined) ? {
+          importanceTier: inferCharacterImportanceTier(input.importanceTier, input.castRole),
+        } : {}),
         ...(prohibitions ? { prohibitionsJson: serializeCharacterProhibitions(prohibitions) } : {}),
         ...(hasStateChanged || hasGoalChanged ? { lastEvolvedAt: new Date() } : {}),
       },

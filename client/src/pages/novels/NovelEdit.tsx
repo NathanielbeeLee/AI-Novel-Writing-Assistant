@@ -326,6 +326,7 @@ export default function NovelEdit() {
     name: "",
     role: "",
     gender: "unknown" as "male" | "female" | "other" | "unknown",
+    importanceTier: "named" as "lead" | "major" | "named" | "extra",
     personality: "",
     background: "",
     development: "",

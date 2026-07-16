@@ -1027,6 +1027,7 @@ export type {
   ChapterRuntimeRequest,
   GenerationContextPackage,
 } from "./chapterRuntime";
+export type { WholeBookReviewIssue, WholeBookReviewReport } from "./wholeBookReview";
 export type {
   StoryWorldSlice,
   StoryWorldSliceBuilderMode,

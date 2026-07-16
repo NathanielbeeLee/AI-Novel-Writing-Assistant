@@ -59,6 +59,7 @@ export const characterCastAutoMembersPrompt: PromptAsset<
       "2. 必须有且只能有 1 个 protagonist。",
       "3. 每个角色都必须输出 gender，允许值只有 male、female、other、unknown。",
       "4. castRole 只能使用：protagonist, antagonist, ally, foil, mentor, love_interest, pressure_source, catalyst。",
+      "5. importanceTier 只能使用 lead、major、named、extra；按全书持续影响分级。",
       "5. name 只能写可直接进入正文的人名或稳定称谓，禁止功能位式名字。",
       "6. 如果故事存在隐藏身份、历史真名、伪装身份或终局身份反转，成员信息里必须显式承接这条线。",
       "7. 每个角色必须输出 personality、background、development 和角色硬事实字段：identityLabel、factionLabel、stanceLabel、powerLevel、realm、currentLocation、availability、prohibitions。",
