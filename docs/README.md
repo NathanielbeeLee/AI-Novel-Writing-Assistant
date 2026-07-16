@@ -66,8 +66,10 @@ Wiki 不替代计划、检查点或发布说明：
 - `docs/releases` 记录用户可见变化。
 
 - [Wiki Index](./wiki/README.md)
+- [AI 小说创作工作台项目总手册](./wiki/project-handbook.md)
 - [Wiki Entry Template](./wiki/entry-template.md)
 - [Module Boundaries](./wiki/architecture/module-boundaries.md)
+- [LLM 请求协议、厂商配置与探针规则](./wiki/architecture/llm-request-protocols.md)
 - [Auto Director Runtime](./wiki/workflows/auto-director-runtime.md)
 - [Chapter Production Chain](./wiki/workflows/chapter-production-chain.md)
 - [Prompt Registry and Structured Output](./wiki/prompts/prompt-registry-and-structured-output.md)
