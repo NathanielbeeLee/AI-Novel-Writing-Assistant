@@ -8,7 +8,10 @@ import {
 import { z } from "zod";
 import { setProviderSecretCache } from "../llm/factory";
 import { evictSharedLimiters } from "../llm/requestLimiter";
-import { refreshProviderModels } from "../llm/modelCatalog";
+import {
+  refreshProviderModels,
+  refreshProviderModelsWithFallback,
+} from "../llm/modelCatalog";
 import { llmProviderSchema } from "../llm/providerSchema";
 import { normalizeModelRequestProtocol } from "../llm/protocols";
 import {
@@ -650,29 +653,32 @@ router.post(
       if (providerRequiresApiKey(provider) && !effectiveKey) {
         throw new AppError("请先配置 API Key，再刷新模型列表。", 400);
       }
-      const models = await refreshProviderModels(
-        provider,
-        effectiveKey,
-        normalizeOptionalText(keyConfig?.baseURL) ?? getProviderEnvBaseUrl(provider),
-      );
       const currentModel = normalizeOptionalText(keyConfig?.model)
         ?? getProviderEnvModel(provider)
         ?? (isBuiltInProvider(provider) ? PROVIDERS[provider].defaultModel : "");
+      const refreshResult = await refreshProviderModelsWithFallback(
+        provider,
+        effectiveKey,
+        normalizeOptionalText(keyConfig?.baseURL) ?? getProviderEnvBaseUrl(provider),
+        [currentModel],
+      );
       res.status(200).json({
         success: true,
         data: {
           provider,
-          models,
+          models: refreshResult.models,
           currentModel,
         },
-        message: "模型列表已刷新。",
+        message: refreshResult.catalogAvailable
+          ? "模型列表已刷新。"
+          : "厂商未提供模型列表接口，已保留当前手动填写的模型。",
       } satisfies ApiResponse<{
         provider: string;
         models: string[];
         currentModel: string;
       }>);
     } catch (error) {
-      if (error instanceof Error && /failed|empty/i.test(error.message)) {
+      if (error instanceof Error && /failed|empty|失败|为空|未提供/i.test(error.message)) {
         next(new AppError(error.message, 400));
         return;
       }

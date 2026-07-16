@@ -8,7 +8,10 @@ import { z } from "zod";
 import { prisma } from "../../db/prisma";
 import { setProviderSecretCache } from "../../llm/factory";
 import { evictSharedLimiters } from "../../llm/requestLimiter";
-import { refreshProviderModels } from "../../llm/modelCatalog";
+import {
+  refreshProviderModels,
+  refreshProviderModelsWithFallback,
+} from "../../llm/modelCatalog";
 import { llmProviderSchema } from "../../llm/providerSchema";
 import { normalizeModelRequestProtocol } from "../../llm/protocols";
 import { isBuiltInProvider } from "../../llm/providers";
@@ -148,8 +151,17 @@ export function registerCustomProviderRoutes(router: Router): void {
         let message = "自定义厂商已创建。";
 
         try {
-          models = await refreshProviderModels(provider, apiKey, baseURL);
+          const refreshResult = await refreshProviderModelsWithFallback(
+            provider,
+            apiKey,
+            baseURL,
+            getFallbackModels(model),
+          );
+          models = refreshResult.models;
           model = model ?? models[0];
+          if (!refreshResult.catalogAvailable) {
+            message = "自定义厂商已创建；该厂商不提供模型列表接口，已使用手动填写的模型。";
+          }
         } catch (error) {
           if (!model) {
             const detail = error instanceof Error ? `：${error.message}` : "。";
