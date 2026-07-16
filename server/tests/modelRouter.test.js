@@ -94,6 +94,26 @@ test("resolveModel preserves route protocol and structured response format prefe
   }
 });
 
+test("resolveModel preserves the Responses API protocol", async () => {
+  const originalFindUnique = prisma.modelRouteConfig.findUnique;
+  prisma.modelRouteConfig.findUnique = async () => ({
+    taskType: "planner",
+    provider: "openai",
+    model: "gpt-4o-mini",
+    temperature: 0.3,
+    maxTokens: null,
+    requestProtocol: "openai_responses",
+    structuredResponseFormat: "json_schema",
+  });
+  try {
+    const resolved = await resolveModel("planner");
+    assert.equal(resolved.requestProtocol, "openai_responses");
+    assert.equal(resolved.structuredResponseFormat, "json_schema");
+  } finally {
+    prisma.modelRouteConfig.findUnique = originalFindUnique;
+  }
+});
+
 test("resolveModel normalizes invalid protocol and structured response preferences to auto", async () => {
   const originalFindUnique = prisma.modelRouteConfig.findUnique;
 

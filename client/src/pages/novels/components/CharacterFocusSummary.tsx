@@ -29,6 +29,7 @@ export default function CharacterFocusSummary(props: CharacterFocusSummaryProps)
               <Badge variant="outline">{getCastRoleLabel(selectedCharacter.castRole)}</Badge>
             )}
             <Badge variant="secondary">{getCharacterGenderLabel(selectedCharacter.gender)}</Badge>
+            <Badge variant="outline">重要度：{{ lead: "核心主角", major: "主要角色", named: "具名配角", extra: "临时角色" }[selectedCharacter.importanceTier ?? "named"]}</Badge>
           </div>
           <div className="text-sm leading-6 text-muted-foreground">
             {isProtagonist ? `当前目标：${primaryLine}` : `与主角关系：${primaryLine}`}

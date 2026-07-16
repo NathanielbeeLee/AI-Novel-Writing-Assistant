@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { AUTO_DIRECTOR_MOBILE_CLASSES } from "@/mobile/autoDirector";
 import { ProviderRequestLimitSummary } from "./ProviderRequestLimitFields";
 import { formatBalanceAmount, formatBalanceTime } from "../settingsFormatters";
+import { getRequestProtocolLabel } from "../protocols/requestProtocolOptions";
 
 export interface ProviderCardViewModel {
   provider: APIKeyStatus;
@@ -176,6 +177,9 @@ export default function ProviderStatusCard(props: {
         <div className="mt-3 space-y-3">
           <div className={`text-xs text-muted-foreground ${AUTO_DIRECTOR_MOBILE_CLASSES.wrapText}`}>
             API 地址：{provider.currentBaseURL || "-"}
+          </div>
+          <div className={`text-xs text-muted-foreground ${AUTO_DIRECTOR_MOBILE_CLASSES.wrapText}`}>
+            文本请求协议：{getRequestProtocolLabel(provider.requestProtocol)}
           </div>
           <ProviderRequestLimitSummary
             concurrencyLimit={provider.concurrencyLimit}

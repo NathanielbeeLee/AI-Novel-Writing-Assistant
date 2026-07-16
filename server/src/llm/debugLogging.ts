@@ -18,6 +18,7 @@ interface LLMDebugMeta {
   timeoutMs?: number;
   taskType?: TaskType;
   baseURL?: string;
+  requestProtocol?: string;
   promptMeta?: PromptInvocationMeta;
 }
 
@@ -325,6 +326,9 @@ function buildHeader(method: "invoke" | "stream" | "batch", meta: LLMDebugMeta):
   if (meta.baseURL) {
     chunks.push(`baseURL=${meta.baseURL}`);
   }
+  if (meta.requestProtocol) {
+    chunks.push(`requestProtocol=${meta.requestProtocol}`);
+  }
   if (meta.promptMeta) {
     chunks.push(`promptId=${meta.promptMeta.promptId}`);
     chunks.push(`promptVersion=${meta.promptMeta.promptVersion}`);
@@ -416,6 +420,7 @@ function buildFileLogBlock(input: {
     timeoutMs: input.meta.timeoutMs ?? null,
     taskType: input.meta.taskType ?? null,
     baseURL: input.meta.baseURL ?? null,
+    requestProtocol: input.meta.requestProtocol ?? null,
     promptMeta: input.meta.promptMeta ?? null,
     actualPromptTokens: input.event === "response" ? extractActualPromptTokens(input.payload) : null,
     latencyMs: input.latencyMs ?? null,

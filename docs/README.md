@@ -34,6 +34,7 @@
 - [Prompt Workbench, Context and Step Runtime Plan](./plans/prompt-workbench-context-and-step-runtime-plan.md)
 - [Auto Director Execution Plane Isolation Plan](./plans/auto-director-execution-plane-isolation-plan.md)
 - [Director Mode Module and State Refactor Checklist](./plans/director-mode-module-state-refactor-checklist.md)
+- [Responses API 与 Chat Completions 双协议接入计划](./plans/responses-api-integration-plan.md)
 
 ### `docs/design`
 
@@ -65,8 +66,10 @@ Wiki 不替代计划、检查点或发布说明：
 - `docs/releases` 记录用户可见变化。
 
 - [Wiki Index](./wiki/README.md)
+- [AI 小说创作工作台项目总手册](./wiki/project-handbook.md)
 - [Wiki Entry Template](./wiki/entry-template.md)
 - [Module Boundaries](./wiki/architecture/module-boundaries.md)
+- [LLM 请求协议、厂商配置与探针规则](./wiki/architecture/llm-request-protocols.md)
 - [Auto Director Runtime](./wiki/workflows/auto-director-runtime.md)
 - [Chapter Production Chain](./wiki/workflows/chapter-production-chain.md)
 - [Prompt Registry and Structured Output](./wiki/prompts/prompt-registry-and-structured-output.md)

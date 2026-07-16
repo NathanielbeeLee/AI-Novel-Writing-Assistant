@@ -32,6 +32,7 @@ export interface APIKeyStatus {
   reasoningEnabled: boolean;
   concurrencyLimit: number;
   requestIntervalMs: number;
+  requestProtocol: ModelRouteRequestProtocol;
   supportsImageGeneration: boolean;
 }
 
@@ -327,6 +328,7 @@ export async function saveAPIKeySetting(
     reasoningEnabled?: boolean;
     concurrencyLimit?: number;
     requestIntervalMs?: number;
+    requestProtocol?: ModelRouteRequestProtocol;
   },
 ) {
   const { data } = await apiClient.put<
@@ -340,6 +342,7 @@ export async function saveAPIKeySetting(
       reasoningEnabled: boolean;
       concurrencyLimit: number;
       requestIntervalMs: number;
+      requestProtocol: ModelRouteRequestProtocol;
       models: string[];
       imageModels: string[];
       supportsImageGeneration: boolean;
@@ -358,6 +361,7 @@ export async function createCustomProvider(payload: {
   reasoningEnabled?: boolean;
   concurrencyLimit?: number;
   requestIntervalMs?: number;
+  requestProtocol?: ModelRouteRequestProtocol;
 }) {
   const { data } = await apiClient.post<
     ApiResponse<{
@@ -370,6 +374,7 @@ export async function createCustomProvider(payload: {
       reasoningEnabled: boolean;
       concurrencyLimit: number;
       requestIntervalMs: number;
+      requestProtocol: ModelRouteRequestProtocol;
       models: string[];
       imageModels: string[];
       supportsImageGeneration: boolean;
@@ -489,6 +494,7 @@ export async function testLLMConnection(payload: {
   model?: string;
   baseURL?: string;
   probeMode?: "plain" | "structured" | "both";
+  requestProtocol?: ModelRouteRequestProtocol;
 }) {
   const { data } = await apiClient.post<
     ApiResponse<{
@@ -499,11 +505,13 @@ export async function testLLMConnection(payload: {
         ok: boolean;
         latency: number | null;
         error: string | null;
+        requestProtocol: ModelRouteRequestProtocol | null;
       } | null;
       structured: {
         ok: boolean;
         latency: number | null;
         error: string | null;
+        requestProtocol: ModelRouteRequestProtocol | null;
         strategy: string | null;
         reasoningForcedOff: boolean;
         fallbackAvailable: boolean;

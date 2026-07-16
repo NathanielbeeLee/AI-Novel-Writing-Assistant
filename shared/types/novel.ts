@@ -1006,6 +1006,7 @@ export interface ModelRouteConfig {
 
 export const MODEL_ROUTE_REQUEST_PROTOCOLS = [
   "auto",
+  "openai_responses",
   "openai_compatible",
   "anthropic",
 ] as const;
@@ -1026,6 +1027,7 @@ export type {
   ChapterRuntimeRequest,
   GenerationContextPackage,
 } from "./chapterRuntime";
+export type { WholeBookReviewIssue, WholeBookReviewReport } from "./wholeBookReview";
 export type {
   StoryWorldSlice,
   StoryWorldSliceBuilderMode,

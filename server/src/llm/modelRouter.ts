@@ -4,6 +4,7 @@ import type {
   ModelRouteStructuredResponseFormat,
   ModelRouteTaskType,
 } from "@ai-novel/shared/types/novel";
+import { normalizeModelRequestProtocol } from "./protocols";
 import { prisma } from "../db/prisma";
 import { isBuiltInProvider, PROVIDERS } from "./providers";
 import type { StructuredOutputStrategy } from "./structuredOutput";
@@ -173,10 +174,7 @@ function normalizeMaxTokens(provider: LLMProvider, maxTokens?: number): number |
 }
 
 export function normalizeRequestProtocol(value?: string | null): ModelRouteRequestProtocol {
-  if (value === "openai_compatible" || value === "anthropic") {
-    return value;
-  }
-  return "auto";
+  return normalizeModelRequestProtocol(value);
 }
 
 export function normalizeStructuredResponseFormat(value?: string | null): ModelRouteStructuredResponseFormat {

@@ -25,6 +25,8 @@ const REQUIRED_COLUMN_BACKFILLS = [
   { tableName: "Character", columnName: "arcMidpoint", columnDefinition: `"arcMidpoint" TEXT` },
   { tableName: "Character", columnName: "arcStart", columnDefinition: `"arcStart" TEXT` },
   { tableName: "Character", columnName: "castRole", columnDefinition: `"castRole" TEXT` },
+  { tableName: "Character", columnName: "importanceTier", columnDefinition: `"importanceTier" TEXT NOT NULL DEFAULT 'named'` },
+  { tableName: "CharacterCastOptionMember", columnName: "importanceTier", columnDefinition: `"importanceTier" TEXT NOT NULL DEFAULT 'named'` },
   { tableName: "Character", columnName: "fear", columnDefinition: `"fear" TEXT` },
   { tableName: "Character", columnName: "firstImpression", columnDefinition: `"firstImpression" TEXT` },
   { tableName: "Character", columnName: "innerNeed", columnDefinition: `"innerNeed" TEXT` },

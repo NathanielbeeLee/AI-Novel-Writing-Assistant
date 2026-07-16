@@ -14,6 +14,7 @@ import type {
   ModelRouteRequestProtocol,
   ModelRouteStructuredResponseFormat,
 } from "@ai-novel/shared/types/novel";
+import { REQUEST_PROTOCOL_OPTIONS } from "./protocols/requestProtocolOptions";
 
 interface ModelRouteFieldsProps {
   draft: RouteDraft;
@@ -121,9 +122,11 @@ export default function ModelRouteFields({
               <SelectValue placeholder="自动选择" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="auto">自动选择</SelectItem>
-              <SelectItem value="openai_compatible">OpenAI 兼容</SelectItem>
-              <SelectItem value="anthropic">Anthropic</SelectItem>
+              {REQUEST_PROTOCOL_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.value === "auto" ? "自动（继承厂商）" : option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

@@ -63,6 +63,7 @@ const navGroups: NavGroup[] = [
   {
     title: "资产",
     items: [
+      { to: "/assets", label: "统一资产中心", icon: SquareStack },
       { to: "/genres", label: "题材基底库", icon: Tags },
       { to: "/story-modes", label: "推进模式库", icon: Workflow },
       { to: "/titles", label: "标题工坊", icon: SquarePen },

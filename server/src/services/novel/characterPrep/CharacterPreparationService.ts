@@ -88,6 +88,7 @@ function serializeCharacterCastOption(row: {
     role: string;
     gender: string;
     castRole: string;
+    importanceTier: string;
     relationToProtagonist: string | null;
     storyFunction: string;
     shortDescription: string | null;
@@ -146,6 +147,7 @@ function serializeCharacterCastOption(row: {
       role: member.role,
       gender: member.gender as CharacterCastOption["members"][number]["gender"],
       castRole: member.castRole as CharacterCastRole,
+      importanceTier: member.importanceTier as CharacterCastOption["members"][number]["importanceTier"],
       relationToProtagonist: member.relationToProtagonist,
       storyFunction: member.storyFunction,
       shortDescription: member.shortDescription,
@@ -439,6 +441,7 @@ export class CharacterPreparationService {
                 role: member.role,
                 gender: member.gender,
                 castRole: member.castRole,
+                importanceTier: member.importanceTier,
                 relationToProtagonist: toOptionalText(member.relationToProtagonist),
                 storyFunction: member.storyFunction,
                 shortDescription: toOptionalText(member.shortDescription),
@@ -638,6 +641,7 @@ export class CharacterPreparationService {
           role: member.role,
           gender: member.gender as "male" | "female" | "other" | "unknown",
           castRole: member.castRole,
+          importanceTier: member.importanceTier as "lead" | "major" | "named" | "extra",
           storyFunction: member.storyFunction,
           relationToProtagonist: member.relationToProtagonist ?? undefined,
           personality: fillIfMissing(matched.personality, member.personality),
@@ -673,6 +677,7 @@ export class CharacterPreparationService {
         role: member.role,
         gender: member.gender as "male" | "female" | "other" | "unknown",
         castRole: member.castRole,
+        importanceTier: member.importanceTier as "lead" | "major" | "named" | "extra",
         storyFunction: member.storyFunction,
         relationToProtagonist: member.relationToProtagonist ?? undefined,
         personality: member.personality ?? undefined,

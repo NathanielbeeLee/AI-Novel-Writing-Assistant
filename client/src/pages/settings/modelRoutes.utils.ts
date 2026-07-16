@@ -8,6 +8,7 @@ import type {
   ModelRouteStructuredResponseFormat,
   ModelRouteTaskType,
 } from "@ai-novel/shared/types/novel";
+import { getRequestProtocolLabel } from "./protocols/requestProtocolOptions";
 
 export interface RouteDraft {
   provider: string;
@@ -105,7 +106,7 @@ export function formatStructuredStatus(status: ModelRouteConnectivityStatus["str
     return "结构化诊断：未执行";
   }
   if (status.ok) {
-    return `结构化正常 · ${status.requestProtocol ?? "auto"} · ${status.strategy ?? "prompt_json"}${status.reasoningForcedOff ? " · 会关闭 thinking" : ""}`;
+    return `结构化正常 · ${getRequestProtocolLabel(status.requestProtocol)} · ${status.strategy ?? "prompt_json"}${status.reasoningForcedOff ? " · 会关闭 thinking" : ""}`;
   }
   return `结构化异常 · ${status.errorCategory ?? "unknown"} · ${status.error ?? "未知错误"}`;
 }

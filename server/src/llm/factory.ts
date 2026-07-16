@@ -1,6 +1,6 @@
 import type { LLMProvider } from "@ai-novel/shared/types/llm";
 import type { ModelRouteRequestProtocol } from "@ai-novel/shared/types/novel";
-import { ChatOpenAI } from "@langchain/openai";
+import type { ChatOpenAI } from "@langchain/openai";
 import type { PromptInvocationMeta } from "../prompting/core/promptTypes";
 import { secretStore } from "../services/settings/secretStore";
 import { resolveModelTemperature } from "./capabilities";
@@ -9,6 +9,12 @@ import { attachLLMDebugLogging } from "./debugLogging";
 import { attachLLMRequestLimiter } from "./requestLimiter";
 import { attachLLMRequestGuard } from "./requestGuard";
 import { resolveProviderReasoningBehavior } from "./reasoning";
+import {
+  createOpenAIProtocolClient,
+  normalizeModelRequestProtocol,
+  resolveEffectiveModelRequestProtocol,
+  type EffectiveModelRequestProtocol,
+} from "./protocols";
 import {
   resolveStructuredOutputProfile,
   type StructuredExecutionMode,
@@ -49,6 +55,7 @@ export interface ProviderSecret {
   key?: string;
   model?: string;
   baseURL?: string;
+  requestProtocol?: ModelRouteRequestProtocol;
   displayName?: string;
   reasoningEnabled?: boolean;
   concurrencyLimit?: number | null;
@@ -69,7 +76,7 @@ export interface ResolvedLLMClientOptions {
   reasoningEnabled: boolean;
   modelKwargs?: Record<string, unknown>;
   includeRawResponse: boolean;
-  requestProtocol: ModelRouteRequestProtocol;
+  requestProtocol: EffectiveModelRequestProtocol;
   executionMode: StructuredExecutionMode;
   structuredProfile?: StructuredOutputProfile | null;
   structuredStrategy?: StructuredOutputStrategy | null;
@@ -116,6 +123,7 @@ function normalizeProviderSecret(secret: ProviderSecret): ProviderSecret {
     key: normalizeOptionalText(secret.key),
     model: normalizeOptionalText(secret.model),
     baseURL: normalizeOptionalText(secret.baseURL),
+    requestProtocol: normalizeModelRequestProtocol(secret.requestProtocol),
     displayName: normalizeOptionalText(secret.displayName),
     reasoningEnabled: secret.reasoningEnabled ?? true,
     concurrencyLimit: normalizeLimitValue(secret.concurrencyLimit),
@@ -134,6 +142,7 @@ function toProviderSecret(item: {
   key?: string | null;
   model?: string | null;
   baseURL?: string | null;
+  requestProtocol?: string | null;
   displayName?: string | null;
   reasoningEnabled?: boolean | null;
   concurrencyLimit?: number | null;
@@ -143,6 +152,7 @@ function toProviderSecret(item: {
     key: item.key ?? undefined,
     model: item.model ?? undefined,
     baseURL: item.baseURL ?? undefined,
+    requestProtocol: normalizeModelRequestProtocol(item.requestProtocol),
     displayName: item.displayName ?? undefined,
     reasoningEnabled: item.reasoningEnabled ?? undefined,
     concurrencyLimit: normalizeLimitValue(item.concurrencyLimit),
@@ -274,7 +284,10 @@ export async function resolveLLMClientOptions(
   const timeoutMs = normalizeOptionalTimeoutMs(options.timeoutMs);
   const concurrencyLimit = normalizeLimitValue(dbSecret?.concurrencyLimit);
   const requestIntervalMs = normalizeLimitValue(dbSecret?.requestIntervalMs);
-  const requestProtocol = options.requestProtocol === "anthropic" ? "anthropic" : "openai_compatible";
+  const requestProtocol = resolveEffectiveModelRequestProtocol({
+    requestProtocol: normalizeModelRequestProtocol(options.requestProtocol),
+    providerRequestProtocol: dbSecret?.requestProtocol,
+  });
   const structuredStrategy = options.structuredStrategy;
   const executionMode = options.executionMode ?? "plain";
   const structuredProfile = executionMode === "structured"
@@ -355,7 +368,7 @@ export function createLLMFromResolvedOptions(resolved: ResolvedLLMClientOptions)
       maxTokens: resolved.maxTokens,
       timeoutMs: resolved.timeoutMs,
     }) as ChatOpenAI
-    : new ChatOpenAI({
+    : createOpenAIProtocolClient({
       apiKey: resolved.apiKey ?? "ollama",
       model: resolved.model,
       modelName: resolved.model,
@@ -367,7 +380,7 @@ export function createLLMFromResolvedOptions(resolved: ResolvedLLMClientOptions)
       configuration: {
         baseURL: resolved.baseURL,
       },
-    });
+    }, resolved.requestProtocol);
   const meta = {
     provider: resolved.provider,
     model: resolved.model,
@@ -377,6 +390,7 @@ export function createLLMFromResolvedOptions(resolved: ResolvedLLMClientOptions)
     taskType: resolved.taskType,
     modelRoute: resolved.modelRoute,
     routeDegraded: resolved.routeDegraded,
+    requestProtocol: resolved.requestProtocol,
     baseURL: resolved.baseURL,
     promptMeta: resolved.promptMeta,
   };

@@ -118,12 +118,14 @@ function normalizeCharacterGender(raw: string): CharacterGender {
 
 export const characterCastRoleSchema = z.string().trim().transform(normalizeCharacterCastRole).pipe(characterCastRoleEnum);
 export const characterGenderSchema = z.string().trim().transform(normalizeCharacterGender).pipe(characterGenderEnum);
+export const characterImportanceTierSchema = z.enum(["lead", "major", "named", "extra"]);
 
 export const characterCastOptionMemberSchema = z.object({
   name: nonEmptyString,
   role: nonEmptyString,
   gender: characterGenderSchema,
   castRole: characterCastRoleSchema,
+  importanceTier: characterImportanceTierSchema,
   relationToProtagonist: z.string().trim().optional().default(""),
   storyFunction: nonEmptyString,
   shortDescription: z.string().trim().optional().default(""),
@@ -203,6 +205,7 @@ export const supplementalCharacterCandidateSchema = z.object({
   role: nonEmptyString,
   gender: characterGenderSchema,
   castRole: characterCastRoleSchema,
+  importanceTier: characterImportanceTierSchema,
   summary: nonEmptyString,
   storyFunction: nonEmptyString,
   relationToProtagonist: z.string().trim().optional().default(""),

@@ -1,11 +1,16 @@
 import type { Router } from "express";
 import type { ApiResponse } from "@ai-novel/shared/types/api";
+import {
+  MODEL_ROUTE_REQUEST_PROTOCOLS,
+  type ModelRouteRequestProtocol,
+} from "@ai-novel/shared/types/novel";
 import { z } from "zod";
 import { prisma } from "../../db/prisma";
 import { setProviderSecretCache } from "../../llm/factory";
 import { evictSharedLimiters } from "../../llm/requestLimiter";
 import { refreshProviderModels } from "../../llm/modelCatalog";
 import { llmProviderSchema } from "../../llm/providerSchema";
+import { normalizeModelRequestProtocol } from "../../llm/protocols";
 import { isBuiltInProvider } from "../../llm/providers";
 import { AppError } from "../../middleware/errorHandler";
 import { validate } from "../../middleware/validate";
@@ -28,6 +33,7 @@ const createCustomProviderSchema = z.object({
   model: z.string().trim().optional(),
   imageModel: z.string().trim().optional(),
   baseURL: z.string().trim().url("API URL 格式不正确。"),
+  requestProtocol: z.enum(MODEL_ROUTE_REQUEST_PROTOCOLS).optional(),
   isActive: z.boolean().optional(),
   reasoningEnabled: z.boolean().optional(),
   concurrencyLimit: z.coerce.number().int().min(0).max(MAX_PROVIDER_CONCURRENCY_LIMIT).optional(),
@@ -45,6 +51,7 @@ type APIKeyRecordLike = {
   key: string | null;
   model: string | null;
   baseURL: string | null;
+  requestProtocol?: string | null;
   isActive: boolean;
   reasoningEnabled?: boolean | null;
   concurrencyLimit?: number | null;
@@ -160,6 +167,7 @@ export function registerCustomProviderRoutes(router: Router): void {
           reasoningEnabled: body.reasoningEnabled ?? true,
           concurrencyLimit: body.concurrencyLimit ?? 0,
           requestIntervalMs: body.requestIntervalMs ?? 0,
+          requestProtocol: normalizeModelRequestProtocol(body.requestProtocol),
         }) as APIKeyRecordLike;
         setProviderSecretCache(provider, data.isActive ? {
           displayName: data.displayName ?? undefined,
@@ -169,6 +177,7 @@ export function registerCustomProviderRoutes(router: Router): void {
           reasoningEnabled: data.reasoningEnabled ?? true,
           concurrencyLimit: data.concurrencyLimit ?? 0,
           requestIntervalMs: data.requestIntervalMs ?? 0,
+          requestProtocol: normalizeModelRequestProtocol(data.requestProtocol),
         } : null);
         const imageModel = await saveProviderImageModel(provider, body.imageModel);
         const imageModels = Array.from(new Set([
@@ -187,6 +196,7 @@ export function registerCustomProviderRoutes(router: Router): void {
             reasoningEnabled: data.reasoningEnabled ?? true,
             concurrencyLimit: normalizeProviderLimit(data.concurrencyLimit),
             requestIntervalMs: normalizeProviderLimit(data.requestIntervalMs),
+            requestProtocol: normalizeModelRequestProtocol(data.requestProtocol),
             models,
             imageModels,
             supportsImageGeneration: Boolean(imageModel),
@@ -202,6 +212,7 @@ export function registerCustomProviderRoutes(router: Router): void {
           reasoningEnabled: boolean;
           concurrencyLimit: number;
           requestIntervalMs: number;
+          requestProtocol: ModelRouteRequestProtocol;
           models: string[];
           imageModels: string[];
           supportsImageGeneration: boolean;

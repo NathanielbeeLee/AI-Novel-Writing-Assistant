@@ -82,6 +82,7 @@ export function buildRuntimeCharacterHardFacts(
     characterId: character.id,
     name: character.name,
     role: character.role ?? null,
+    importanceTier: character.importanceTier,
     identityLabel: compactText(character.identityLabel),
     factionLabel: compactText(character.factionLabel),
     stanceLabel: compactText(character.stanceLabel),

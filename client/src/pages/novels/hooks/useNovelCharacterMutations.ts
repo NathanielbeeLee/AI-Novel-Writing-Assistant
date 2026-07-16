@@ -38,6 +38,7 @@ interface CharacterFormState {
   name: string;
   role: string;
   gender: "male" | "female" | "other" | "unknown";
+  importanceTier: "lead" | "major" | "named" | "extra";
   personality: string;
   background: string;
   development: string;
@@ -250,6 +251,7 @@ export function useNovelCharacterMutations(input: UseNovelCharacterMutationsInpu
         name: characterForm.name,
         role: characterForm.role,
         gender: characterForm.gender,
+        importanceTier: characterForm.importanceTier,
         personality: characterForm.personality,
         background: characterForm.background,
         development: characterForm.development,

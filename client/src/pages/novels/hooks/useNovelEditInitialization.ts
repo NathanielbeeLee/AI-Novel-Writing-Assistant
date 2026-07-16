@@ -23,6 +23,7 @@ interface CharacterFormState {
   name: string;
   role: string;
   gender: "male" | "female" | "other" | "unknown";
+  importanceTier: "lead" | "major" | "named" | "extra";
   personality: string;
   background: string;
   development: string;
@@ -63,6 +64,7 @@ const EMPTY_CHARACTER_FORM: CharacterFormState = {
   name: "",
   role: "",
   gender: "unknown",
+  importanceTier: "named",
   personality: "",
   background: "",
   development: "",
@@ -207,6 +209,7 @@ export function useNovelEditInitialization({
       name: selectedCharacter.name ?? "",
       role: selectedCharacter.role ?? "",
       gender: selectedCharacter.gender ?? "unknown",
+      importanceTier: selectedCharacter.importanceTier ?? "named",
       personality: selectedCharacter.personality ?? "",
       background: selectedCharacter.background ?? "",
       development: selectedCharacter.development ?? "",
