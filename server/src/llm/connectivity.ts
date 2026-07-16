@@ -325,18 +325,19 @@ async function testConnection(input: {
     baseURL: input.baseURL,
     preferred: input.requestProtocol,
   });
-  let plain: LLMConnectivityStatus | null = null;
-  let structured: LLMConnectivityStatus | null = null;
-  if (probeMode === "plain" || probeMode === "both") {
-    for (const requestProtocol of protocolCandidates) {
-      plain = await testPlainConnection({ ...input, requestProtocol });
-      if (plain.ok) {
-        break;
-      }
-    }
-  }
-  if (probeMode === "structured" || probeMode === "both") {
-    for (const requestProtocol of protocolCandidates) {
+  let bestResult: {
+    plain: LLMConnectivityStatus | null;
+    structured: LLMConnectivityStatus | null;
+    successCount: number;
+  } | null = null;
+  const requiredSuccessCount = probeMode === "both" ? 2 : 1;
+
+  for (const requestProtocol of protocolCandidates) {
+    const plain = probeMode === "plain" || probeMode === "both"
+      ? await testPlainConnection({ ...input, requestProtocol })
+      : null;
+    let structured: LLMConnectivityStatus | null = null;
+    if (probeMode === "structured" || probeMode === "both") {
       for (const structuredResponseFormat of getStructuredFormatCandidates({
         provider: input.provider,
         model: input.model,
@@ -349,16 +350,22 @@ async function testConnection(input: {
           break;
         }
       }
-      if (structured?.ok) {
-        break;
-      }
+    }
+
+    const successCount = Number(plain?.ok === true) + Number(structured?.ok === true);
+    if (!bestResult || successCount > bestResult.successCount) {
+      bestResult = { plain, structured, successCount };
+    }
+    if (successCount === requiredSuccessCount) {
+      break;
     }
   }
+
   return mergeProbeStatuses({
     provider: input.provider,
     model: input.model,
-    plain,
-    structured,
+    plain: bestResult?.plain ?? null,
+    structured: bestResult?.structured ?? null,
   });
 }
 

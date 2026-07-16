@@ -12,6 +12,8 @@ const {
   resolveLLMClientOptions,
   setProviderSecretCache,
 } = require("../dist/llm/factory.js");
+const { llmConnectivityService } = require("../dist/llm/connectivity.js");
+const { refreshProviderModels } = require("../dist/llm/modelCatalog.js");
 const { extractLlmTokenUsage } = require("../dist/llm/usageTracking.js");
 
 function listen(server) {
@@ -130,6 +132,109 @@ test("provider defaults are inherited while an explicit route protocol wins", as
     assert.equal(explicit.requestProtocol, "openai_compatible");
   } finally {
     setProviderSecretCache("openai", null);
+  }
+});
+
+test("custom providers load CLIProxyAPI-style model ids from /v1/models", async () => {
+  const requests = [];
+  const server = http.createServer((req, res) => {
+    requests.push({ url: req.url, authorization: req.headers.authorization });
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      object: "list",
+      data: [
+        { id: "gpt-5-mini", object: "model" },
+        { id: "qwen3-coder", object: "model" },
+      ],
+    }));
+  });
+  const port = await listen(server);
+
+  try {
+    const models = await refreshProviderModels(
+      "custom_cli_proxy",
+      "catalog-key",
+      `http://127.0.0.1:${port}/v1`,
+    );
+    assert.deepEqual(models, ["gpt-5-mini", "qwen3-coder"]);
+    assert.deepEqual(requests, [{
+      url: "/v1/models",
+      authorization: "Bearer catalog-key",
+    }]);
+  } finally {
+    await close(server);
+  }
+});
+
+test("automatic connectivity probing requires plain and structured calls to share one protocol", async () => {
+  const requests = [];
+  const server = http.createServer(async (req, res) => {
+    const body = await readJsonRequest(req);
+    requests.push({ url: req.url, body });
+
+    if (req.url === "/v1/chat/completions") {
+      const isStructured = body.response_format != null
+        || body.messages?.some((message) => String(message.content).includes("合法 JSON"));
+      if (isStructured) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: { message: "structured output is unsupported" } }));
+        return;
+      }
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({
+        id: "chat_probe",
+        object: "chat.completion",
+        created: 1_700_000_000,
+        model: body.model,
+        choices: [{
+          index: 0,
+          finish_reason: "stop",
+          message: { role: "assistant", content: "ok" },
+        }],
+        usage: { prompt_tokens: 2, completion_tokens: 1, total_tokens: 3 },
+      }));
+      return;
+    }
+
+    if (req.url === "/v1/responses") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(buildResponsesPayload(
+        JSON.stringify({ status: "ok" }),
+        body.model,
+      )));
+      return;
+    }
+
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: { message: "unsupported protocol" } }));
+  });
+  const port = await listen(server);
+  setProviderSecretCache("custom_preview", {
+    key: "probe-key",
+    model: "probe-model",
+    baseURL: `http://127.0.0.1:${port}/v1`,
+    requestProtocol: "auto",
+  });
+
+  try {
+    const result = await llmConnectivityService.testConnection({
+      provider: "custom_preview",
+      apiKey: "probe-key",
+      model: "probe-model",
+      baseURL: `http://127.0.0.1:${port}/v1`,
+      requestProtocol: "auto",
+      probeMode: "both",
+    });
+
+    assert.equal(result.plain?.ok, true);
+    assert.equal(result.structured?.ok, true);
+    assert.equal(result.plain?.requestProtocol, "openai_responses");
+    assert.equal(result.structured?.requestProtocol, "openai_responses");
+    assert.ok(requests.some((request) => request.url === "/v1/chat/completions"));
+    assert.ok(requests.some((request) => request.url === "/v1/responses"));
+  } finally {
+    setProviderSecretCache("custom_preview", null);
+    await close(server);
   }
 });
 

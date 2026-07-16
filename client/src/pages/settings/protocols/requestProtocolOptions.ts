@@ -35,3 +35,27 @@ export function getRequestProtocolDescription(value?: ModelRouteRequestProtocol 
   return REQUEST_PROTOCOL_OPTIONS.find((option) => option.value === value)?.description
     ?? REQUEST_PROTOCOL_OPTIONS[0].description;
 }
+
+interface ProtocolProbeStatus {
+  ok: boolean;
+  requestProtocol: ModelRouteRequestProtocol | null;
+}
+
+export function getSharedSuccessfulRequestProtocol(input: {
+  plain?: ProtocolProbeStatus | null;
+  structured?: ProtocolProbeStatus | null;
+}): Exclude<ModelRouteRequestProtocol, "auto"> | null {
+  if (!input.plain?.ok || !input.structured?.ok) {
+    return null;
+  }
+  const plainProtocol = input.plain.requestProtocol;
+  const structuredProtocol = input.structured.requestProtocol;
+  if (
+    !plainProtocol
+    || plainProtocol === "auto"
+    || plainProtocol !== structuredProtocol
+  ) {
+    return null;
+  }
+  return plainProtocol;
+}

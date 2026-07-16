@@ -29,7 +29,10 @@ import SettingsReadinessCard, { buildSettingsReadinessItems } from "./components
 import SettingsSectionGroup from "./components/SettingsSectionGroup";
 import StyleEngineRuntimeSettingsCard from "./components/StyleEngineRuntimeSettingsCard";
 import SettingsActionResult from "./SettingsActionResult";
-import { getRequestProtocolLabel } from "./protocols/requestProtocolOptions";
+import {
+  getRequestProtocolLabel,
+  getSharedSuccessfulRequestProtocol,
+} from "./protocols/requestProtocolOptions";
 import { AUTO_DIRECTOR_MOBILE_CLASSES } from "@/mobile/autoDirector";
 
 function formatConnectionTestResult(response: Awaited<ReturnType<typeof testLLMConnection>>): string {
@@ -46,7 +49,10 @@ function formatConnectionTestResult(response: Awaited<ReturnType<typeof testLLMC
       ? `结构化正常（${getRequestProtocolLabel(structured.requestProtocol)}）${structured.strategy ? `，策略 ${structured.strategy}` : ""}${structured.reasoningForcedOff ? "，已强制关闭 thinking" : ""}`
       : `结构化失败${structured.errorCategory ? `，分类 ${structured.errorCategory}` : ""}${structured.error ? `：${structured.error}` : ""}`
     : "结构化未检测";
-  return `连接成功，总耗时 ${latency}ms · ${plainText} · ${structuredText}`;
+  const summary = plain?.ok && structured?.ok
+    ? "普通与结构化能力均正常"
+    : "检测完成，但存在未通过的能力";
+  return `${summary}，总耗时 ${latency}ms · ${plainText} · ${structuredText}`;
 }
 
 export default function SettingsPage() {
@@ -413,7 +419,9 @@ export default function SettingsPage() {
         provider: provider.provider,
         model: provider.currentModel || undefined,
         baseURL: provider.currentBaseURL || undefined,
-        requestProtocol: provider.requestProtocol,
+        requestProtocol: provider.requestProtocol === "auto"
+          ? "openai_compatible"
+          : provider.requestProtocol,
       },
       {
         onSuccess: (response) => {
@@ -444,7 +452,22 @@ export default function SettingsPage() {
       },
       {
         onSuccess: (response) => {
-          setDialogTestResult(formatConnectionTestResult(response));
+          const detectedProtocol = getSharedSuccessfulRequestProtocol({
+            plain: response.data?.plain,
+            structured: response.data?.structured,
+          });
+          const shouldAdoptDetectedProtocol = form.requestProtocol === "auto" && detectedProtocol != null;
+          if (shouldAdoptDetectedProtocol) {
+            setForm((previous) => previous.requestProtocol === "auto"
+              ? { ...previous, requestProtocol: detectedProtocol }
+              : previous);
+          }
+          setDialogTestResult([
+            formatConnectionTestResult(response),
+            shouldAdoptDetectedProtocol
+              ? `已自动选择 ${getRequestProtocolLabel(detectedProtocol)}；请保存配置后生效。`
+              : null,
+          ].filter(Boolean).join(" · "));
         },
         onError: (error) => {
           setDialogTestResult(error instanceof Error ? error.message : "连接测试失败。");
