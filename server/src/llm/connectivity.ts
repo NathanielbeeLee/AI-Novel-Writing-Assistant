@@ -8,6 +8,12 @@ import type {
 } from "@ai-novel/shared/types/novel";
 import { getLLM, resolveLLMClientOptions } from "./factory";
 import {
+  getAutomaticProtocolCandidates,
+  isExplicitModelRequestProtocol,
+  normalizeModelRequestProtocol,
+  type EffectiveModelRequestProtocol,
+} from "./protocols";
+import {
   MODEL_ROUTE_TASK_TYPES,
   resolveModel,
   toStructuredOutputStrategy,
@@ -62,11 +68,31 @@ function toErrorMessage(error: unknown): string {
   return "连接测试失败。";
 }
 
-function getProtocolCandidates(preferred?: ModelRouteRequestProtocol): ModelRouteRequestProtocol[] {
-  if (preferred === "openai_compatible" || preferred === "anthropic") {
-    return [preferred, preferred === "anthropic" ? "openai_compatible" : "anthropic"];
+async function getProtocolCandidates(input: {
+  provider: LLMProvider;
+  model?: string;
+  apiKey?: string;
+  baseURL?: string;
+  preferred?: ModelRouteRequestProtocol;
+}): Promise<EffectiveModelRequestProtocol[]> {
+  const preferred = normalizeModelRequestProtocol(input.preferred);
+  if (isExplicitModelRequestProtocol(preferred)) {
+    return [preferred];
   }
-  return ["openai_compatible", "anthropic"];
+  try {
+    const resolved = await resolveLLMClientOptions(input.provider, {
+      model: input.model,
+      apiKey: input.apiKey,
+      baseURL: input.baseURL,
+      requestProtocol: "auto",
+    });
+    return getAutomaticProtocolCandidates({
+      provider: resolved.provider,
+      preferred: resolved.requestProtocol,
+    });
+  } catch {
+    return getAutomaticProtocolCandidates({ provider: input.provider });
+  }
 }
 
 function getStructuredFormatCandidates(input: {
@@ -292,10 +318,17 @@ async function testConnection(input: {
   structuredResponseFormat?: ModelRouteStructuredResponseFormat;
 }): Promise<LLMConnectivityStatus> {
   const probeMode = input.probeMode ?? "both";
+  const protocolCandidates = await getProtocolCandidates({
+    provider: input.provider,
+    model: input.model,
+    apiKey: input.apiKey,
+    baseURL: input.baseURL,
+    preferred: input.requestProtocol,
+  });
   let plain: LLMConnectivityStatus | null = null;
   let structured: LLMConnectivityStatus | null = null;
   if (probeMode === "plain" || probeMode === "both") {
-    for (const requestProtocol of getProtocolCandidates(input.requestProtocol)) {
+    for (const requestProtocol of protocolCandidates) {
       plain = await testPlainConnection({ ...input, requestProtocol });
       if (plain.ok) {
         break;
@@ -303,7 +336,7 @@ async function testConnection(input: {
     }
   }
   if (probeMode === "structured" || probeMode === "both") {
-    for (const requestProtocol of getProtocolCandidates(input.requestProtocol)) {
+    for (const requestProtocol of protocolCandidates) {
       for (const structuredResponseFormat of getStructuredFormatCandidates({
         provider: input.provider,
         model: input.model,

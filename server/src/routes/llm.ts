@@ -1,5 +1,6 @@
 import { Router } from "express";
 import type { ApiResponse } from "@ai-novel/shared/types/api";
+import { MODEL_ROUTE_REQUEST_PROTOCOLS } from "@ai-novel/shared/types/novel";
 import { z } from "zod";
 import { prisma } from "../db/prisma";
 import { llmConnectivityService } from "../llm/connectivity";
@@ -20,6 +21,7 @@ const llmTestSchema = z.object({
   model: z.string().trim().optional(),
   baseURL: z.string().trim().url("API URL 格式不正确。").optional(),
   probeMode: z.enum(["plain", "structured", "both"]).optional(),
+  requestProtocol: z.enum(MODEL_ROUTE_REQUEST_PROTOCOLS).optional(),
 });
 
 const structuredFallbackSchema = z.object({
@@ -159,7 +161,7 @@ const modelRouteUpsertSchema = z.object({
   model: z.string().trim().min(1),
   temperature: z.number().min(0).max(2).optional(),
   maxTokens: z.union([z.number().int().min(64).max(16384), z.null()]).optional(),
-  requestProtocol: z.enum(["auto", "openai_compatible", "anthropic"]).optional(),
+  requestProtocol: z.enum(MODEL_ROUTE_REQUEST_PROTOCOLS).optional(),
   structuredResponseFormat: z.enum(["auto", "json_schema", "json_object", "prompt_json"]).optional(),
 });
 
@@ -192,8 +194,15 @@ router.post(
   validate({ body: llmTestSchema }),
   async (req, res, next) => {
     try {
-      const { provider, apiKey, model, baseURL, probeMode } = req.body as z.infer<typeof llmTestSchema>;
-      const result = await llmConnectivityService.testConnection({ provider, apiKey, model, baseURL, probeMode });
+      const { provider, apiKey, model, baseURL, probeMode, requestProtocol } = req.body as z.infer<typeof llmTestSchema>;
+      const result = await llmConnectivityService.testConnection({
+        provider,
+        apiKey,
+        model,
+        baseURL,
+        probeMode,
+        requestProtocol,
+      });
       const shouldFail =
         probeMode === "structured"
           ? result.structured?.ok === false

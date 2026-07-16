@@ -1,9 +1,15 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { APIKeyStatus } from "@/api/settings";
+import type { ModelRouteRequestProtocol } from "@ai-novel/shared/types/novel";
 import SearchableSelect from "@/components/common/SearchableSelect";
 import { Button } from "@/components/ui/button";
 import { AppDialogContent, Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  getRequestProtocolDescription,
+  REQUEST_PROTOCOL_OPTIONS,
+} from "../protocols/requestProtocolOptions";
 import ProviderRequestLimitFields from "./ProviderRequestLimitFields";
 
 export interface ProviderFormState {
@@ -14,6 +20,7 @@ export interface ProviderFormState {
   baseURL: string;
   concurrencyLimit: string;
   requestIntervalMs: string;
+  requestProtocol: ModelRouteRequestProtocol;
 }
 
 interface ProviderConfigDialogProps {
@@ -150,8 +157,33 @@ export default function ProviderConfigDialog({
             />
             <div className="text-xs text-muted-foreground">
               {isCreatingCustomProvider
-                ? "填写 OpenAI 兼容 API 地址，通常以 /v1 结尾；本地 Ollama 常见地址是 http://127.0.0.1:11434/v1。"
-                : "留空会使用默认地址；本地 Ollama 常见地址是 http://127.0.0.1:11434/v1。"}
+                ? "填写接口根地址，通常以 /v1 结尾；CLIProxyAPI 默认可填写 http://127.0.0.1:8317/v1。"
+                : "留空会使用默认地址；CLIProxyAPI 默认地址是 http://127.0.0.1:8317/v1。"}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground">文本请求协议</div>
+            <Select
+              value={form.requestProtocol}
+              onValueChange={(value) => setForm((prev) => ({
+                ...prev,
+                requestProtocol: value as ModelRouteRequestProtocol,
+              }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="自动（兼容优先）" />
+              </SelectTrigger>
+              <SelectContent>
+                {REQUEST_PROTOCOL_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.value === "auto" ? "自动（兼容优先）" : option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="text-xs text-muted-foreground">
+              {getRequestProtocolDescription(form.requestProtocol)}
             </div>
           </div>
 

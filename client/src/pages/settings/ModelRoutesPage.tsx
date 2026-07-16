@@ -30,6 +30,7 @@ import {
   type RouteSavePayload,
   type StructuredFallbackDraft,
 } from "./modelRoutes.utils";
+import { getRequestProtocolLabel } from "./protocols/requestProtocolOptions";
 import type { ModelRouteTaskType } from "@ai-novel/shared/types/novel";
 
 function RouteStatusDot({ state }: { state: ConnectivityState }) {
@@ -491,7 +492,7 @@ export default function ModelRoutesPage() {
                   </div>
                   {connectivity?.structured ? (
                     <div>
-                      请求协议：{connectivity.structured.requestProtocol ?? connectivity.requestProtocol ?? "无"}，
+                      请求协议：{getRequestProtocolLabel(connectivity.structured.requestProtocol ?? connectivity.requestProtocol)}，
                       结构化策略：{connectivity.structured.strategy ?? "无"}，
                       {connectivity.structured.reasoningForcedOff ? "会关闭 thinking" : "保留 thinking"}，
                       {connectivity.structured.fallbackAvailable ? "备用模型可用" : "备用模型未启用"}

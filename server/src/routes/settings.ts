@@ -1,11 +1,16 @@
 import { Router } from "express";
 import type { ApiResponse } from "@ai-novel/shared/types/api";
 import type { BuiltinLLMProvider, LLMProvider } from "@ai-novel/shared/types/llm";
+import {
+  MODEL_ROUTE_REQUEST_PROTOCOLS,
+  type ModelRouteRequestProtocol,
+} from "@ai-novel/shared/types/novel";
 import { z } from "zod";
 import { setProviderSecretCache } from "../llm/factory";
 import { evictSharedLimiters } from "../llm/requestLimiter";
 import { refreshProviderModels } from "../llm/modelCatalog";
 import { llmProviderSchema } from "../llm/providerSchema";
+import { normalizeModelRequestProtocol } from "../llm/protocols";
 import {
   getProviderEnvApiKey,
   getProviderEnvBaseUrl,
@@ -60,6 +65,7 @@ const upsertApiKeySchema = z.object({
   model: z.string().trim().optional(),
   imageModel: z.string().trim().optional(),
   baseURL: z.union([z.string().trim().url("API URL 格式不正确。"), z.literal("")]).optional(),
+  requestProtocol: z.enum(MODEL_ROUTE_REQUEST_PROTOCOLS).optional(),
   isActive: z.boolean().optional(),
   reasoningEnabled: z.boolean().optional(),
   concurrencyLimit: z.coerce.number().int().min(0).max(MAX_PROVIDER_CONCURRENCY_LIMIT).optional(),
@@ -114,6 +120,7 @@ type APIKeyRecordLike = {
   key: string | null;
   model: string | null;
   baseURL: string | null;
+  requestProtocol?: string | null;
   isActive: boolean;
   reasoningEnabled?: boolean | null;
   concurrencyLimit?: number | null;
@@ -139,6 +146,7 @@ type BuiltInProviderStatus = {
   reasoningEnabled: boolean;
   concurrencyLimit: number;
   requestIntervalMs: number;
+  requestProtocol: ModelRouteRequestProtocol;
   supportsImageGeneration: boolean;
 };
 
@@ -161,6 +169,7 @@ type CustomProviderStatus = {
   reasoningEnabled: boolean;
   concurrencyLimit: number;
   requestIntervalMs: number;
+  requestProtocol: ModelRouteRequestProtocol;
   supportsImageGeneration: boolean;
 };
 
@@ -191,6 +200,7 @@ function buildBuiltInProviderStatus(
     key?: string | null;
     model?: string | null;
     baseURL?: string | null;
+    requestProtocol?: string | null;
     isActive?: boolean;
     reasoningEnabled?: boolean | null;
     concurrencyLimit?: number | null;
@@ -231,6 +241,7 @@ function buildBuiltInProviderStatus(
     reasoningEnabled: item?.reasoningEnabled ?? true,
     concurrencyLimit: normalizeProviderLimit(item?.concurrencyLimit),
     requestIntervalMs: normalizeProviderLimit(item?.requestIntervalMs),
+    requestProtocol: normalizeModelRequestProtocol(item?.requestProtocol),
     supportsImageGeneration: Boolean(currentImageModel),
   };
 }
@@ -241,6 +252,7 @@ function buildCustomProviderStatus(item: {
   key: string | null;
   model: string | null;
   baseURL: string | null;
+  requestProtocol?: string | null;
   isActive: boolean;
   reasoningEnabled?: boolean | null;
   concurrencyLimit?: number | null;
@@ -268,6 +280,7 @@ function buildCustomProviderStatus(item: {
     reasoningEnabled: item.reasoningEnabled ?? true,
     concurrencyLimit: normalizeProviderLimit(item.concurrencyLimit),
     requestIntervalMs: normalizeProviderLimit(item.requestIntervalMs),
+    requestProtocol: normalizeModelRequestProtocol(item.requestProtocol),
     supportsImageGeneration: Boolean(imageModel),
   };
 }
@@ -496,6 +509,9 @@ router.put(
       const nextReasoningEnabled = body.reasoningEnabled ?? existingRecord?.reasoningEnabled ?? true;
       const nextConcurrencyLimit = body.concurrencyLimit ?? normalizeProviderLimit(existingRecord?.concurrencyLimit);
       const nextRequestIntervalMs = body.requestIntervalMs ?? normalizeProviderLimit(existingRecord?.requestIntervalMs);
+      const nextRequestProtocol = body.requestProtocol !== undefined
+        ? normalizeModelRequestProtocol(body.requestProtocol)
+        : normalizeModelRequestProtocol(existingRecord?.requestProtocol);
       const requiresApiKey = providerRequiresApiKey(provider);
 
       if (requiresApiKey && !effectiveKey) {
@@ -517,6 +533,7 @@ router.put(
           reasoningEnabled: nextReasoningEnabled,
           concurrencyLimit: nextConcurrencyLimit,
           requestIntervalMs: nextRequestIntervalMs,
+          requestProtocol: nextRequestProtocol,
         })
         : await secretStore.updateProvider(provider, {
           displayName: nextDisplayName,
@@ -527,6 +544,7 @@ router.put(
           reasoningEnabled: nextReasoningEnabled,
           concurrencyLimit: nextConcurrencyLimit,
           requestIntervalMs: nextRequestIntervalMs,
+          requestProtocol: nextRequestProtocol,
         })) as APIKeyRecordLike;
 
       const currentImageModel = body.imageModel !== undefined
@@ -545,6 +563,7 @@ router.put(
         reasoningEnabled: data.reasoningEnabled ?? true,
         concurrencyLimit: data.concurrencyLimit ?? 0,
         requestIntervalMs: data.requestIntervalMs ?? 0,
+        requestProtocol: normalizeModelRequestProtocol(data.requestProtocol),
       } : null);
       evictSharedLimiters(provider);
 
@@ -568,6 +587,7 @@ router.put(
           reasoningEnabled: data.reasoningEnabled ?? true,
           concurrencyLimit: normalizeProviderLimit(data.concurrencyLimit),
           requestIntervalMs: normalizeProviderLimit(data.requestIntervalMs),
+          requestProtocol: normalizeModelRequestProtocol(data.requestProtocol),
           models,
           imageModels,
           supportsImageGeneration: Boolean(currentImageModel),
@@ -583,6 +603,7 @@ router.put(
         reasoningEnabled: boolean;
         concurrencyLimit: number;
         requestIntervalMs: number;
+        requestProtocol: ModelRouteRequestProtocol;
         models: string[];
         imageModels: string[];
         supportsImageGeneration: boolean;

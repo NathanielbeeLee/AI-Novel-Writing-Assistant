@@ -1006,6 +1006,7 @@ export interface ModelRouteConfig {
 
 export const MODEL_ROUTE_REQUEST_PROTOCOLS = [
   "auto",
+  "openai_responses",
   "openai_compatible",
   "anthropic",
 ] as const;

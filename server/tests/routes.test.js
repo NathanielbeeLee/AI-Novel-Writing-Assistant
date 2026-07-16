@@ -837,6 +837,7 @@ test("POST /api/settings/custom-providers creates a custom provider entry", asyn
     key: data.key,
     model: data.model,
     baseURL: data.baseURL,
+    requestProtocol: data.requestProtocol,
     isActive: data.isActive,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -863,6 +864,7 @@ test("POST /api/settings/custom-providers creates a custom provider entry", asyn
         name: "StoryHub Gateway",
         model: "story-model",
         baseURL: "https://gateway.example.com/v1",
+        requestProtocol: "openai_responses",
       }),
     });
     assert.equal(response.status, 201);
@@ -870,6 +872,7 @@ test("POST /api/settings/custom-providers creates a custom provider entry", asyn
     assert.equal(payload.success, true);
     assert.equal(payload.data.displayName, "StoryHub Gateway");
     assert.equal(payload.data.baseURL, "https://gateway.example.com/v1");
+    assert.equal(payload.data.requestProtocol, "openai_responses");
     assert.ok(payload.data.provider.startsWith("custom_storyhub_gateway"));
     assert.ok(payload.data.models.includes("story-model"));
   } finally {

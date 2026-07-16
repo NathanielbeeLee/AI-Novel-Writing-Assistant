@@ -1441,6 +1441,7 @@ model APIKey {
   key       String?
   model     String?
   baseURL   String?
+  requestProtocol String @default("auto")
   isActive  Boolean  @default(true)
   reasoningEnabled Boolean @default(true)
   concurrencyLimit Int @default(0)

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "@ai-novel/shared/types/api";
 import type { LLMProvider } from "@ai-novel/shared/types/llm";
+import type { ModelRouteRequestProtocol } from "@ai-novel/shared/types/novel";
 import {
   type APIKeyStatus,
   createCustomProvider,
@@ -28,6 +29,7 @@ import SettingsReadinessCard, { buildSettingsReadinessItems } from "./components
 import SettingsSectionGroup from "./components/SettingsSectionGroup";
 import StyleEngineRuntimeSettingsCard from "./components/StyleEngineRuntimeSettingsCard";
 import SettingsActionResult from "./SettingsActionResult";
+import { getRequestProtocolLabel } from "./protocols/requestProtocolOptions";
 import { AUTO_DIRECTOR_MOBILE_CLASSES } from "@/mobile/autoDirector";
 
 function formatConnectionTestResult(response: Awaited<ReturnType<typeof testLLMConnection>>): string {
@@ -36,12 +38,12 @@ function formatConnectionTestResult(response: Awaited<ReturnType<typeof testLLMC
   const structured = response.data?.structured;
   const plainText = plain
     ? plain.ok
-      ? `普通连通正常${plain.latency != null ? ` (${plain.latency}ms)` : ""}`
+      ? `普通连通正常（${getRequestProtocolLabel(plain.requestProtocol)}）${plain.latency != null ? ` (${plain.latency}ms)` : ""}`
       : `普通连通失败${plain.error ? `：${plain.error}` : ""}`
     : "普通连通未检测";
   const structuredText = structured
     ? structured.ok
-      ? `结构化正常${structured.strategy ? `，策略 ${structured.strategy}` : ""}${structured.reasoningForcedOff ? "，已强制关闭 thinking" : ""}`
+      ? `结构化正常（${getRequestProtocolLabel(structured.requestProtocol)}）${structured.strategy ? `，策略 ${structured.strategy}` : ""}${structured.reasoningForcedOff ? "，已强制关闭 thinking" : ""}`
       : `结构化失败${structured.errorCategory ? `，分类 ${structured.errorCategory}` : ""}${structured.error ? `：${structured.error}` : ""}`
     : "结构化未检测";
   return `连接成功，总耗时 ${latency}ms · ${plainText} · ${structuredText}`;
@@ -59,6 +61,7 @@ export default function SettingsPage() {
     baseURL: "",
     concurrencyLimit: "0",
     requestIntervalMs: "0",
+    requestProtocol: "auto",
   });
   const [dialogTestResult, setDialogTestResult] = useState("");
   const [providerTestResults, setProviderTestResults] = useState<Record<string, string>>({});
@@ -140,6 +143,7 @@ export default function SettingsPage() {
       baseURL: "",
       concurrencyLimit: "0",
       requestIntervalMs: "0",
+      requestProtocol: "auto",
     });
     setDialogTestResult("");
     setPreviewModels([]);
@@ -195,6 +199,7 @@ export default function SettingsPage() {
       baseURL?: string;
       concurrencyLimit?: number;
       requestIntervalMs?: number;
+      requestProtocol?: ModelRouteRequestProtocol;
     }) =>
       saveAPIKeySetting(payload.provider, {
         displayName: payload.displayName,
@@ -204,6 +209,7 @@ export default function SettingsPage() {
         baseURL: payload.baseURL,
         concurrencyLimit: payload.concurrencyLimit,
         requestIntervalMs: payload.requestIntervalMs,
+        requestProtocol: payload.requestProtocol,
       }),
     onSuccess: async (response) => {
       resetDialogState();
@@ -224,6 +230,7 @@ export default function SettingsPage() {
       baseURL: string;
       concurrencyLimit?: number;
       requestIntervalMs?: number;
+      requestProtocol?: ModelRouteRequestProtocol;
     }) => createCustomProvider(payload),
     onSuccess: async (response) => {
       resetDialogState();
@@ -326,6 +333,7 @@ export default function SettingsPage() {
       baseURL: config.currentBaseURL,
       concurrencyLimit: String(config.concurrencyLimit ?? 0),
       requestIntervalMs: String(config.requestIntervalMs ?? 0),
+      requestProtocol: config.requestProtocol ?? "auto",
     });
     setDialogTestResult("");
     setActionResult("");
@@ -344,6 +352,7 @@ export default function SettingsPage() {
       baseURL: "",
       concurrencyLimit: "0",
       requestIntervalMs: "0",
+      requestProtocol: "auto",
     });
     setDialogTestResult("");
     setActionResult("");
@@ -374,6 +383,7 @@ export default function SettingsPage() {
         baseURL: form.baseURL.trim(),
         concurrencyLimit: Number.parseInt(form.concurrencyLimit, 10) || 0,
         requestIntervalMs: Number.parseInt(form.requestIntervalMs, 10) || 0,
+        requestProtocol: form.requestProtocol,
       });
       return;
     }
@@ -389,6 +399,7 @@ export default function SettingsPage() {
       baseURL: form.baseURL,
       concurrencyLimit: Number.parseInt(form.concurrencyLimit, 10) || 0,
       requestIntervalMs: Number.parseInt(form.requestIntervalMs, 10) || 0,
+      requestProtocol: form.requestProtocol,
     });
   };
 
@@ -402,6 +413,7 @@ export default function SettingsPage() {
         provider: provider.provider,
         model: provider.currentModel || undefined,
         baseURL: provider.currentBaseURL || undefined,
+        requestProtocol: provider.requestProtocol,
       },
       {
         onSuccess: (response) => {
@@ -428,6 +440,7 @@ export default function SettingsPage() {
         model: form.model.trim() || undefined,
         baseURL: form.baseURL.trim() ? form.baseURL : undefined,
         probeMode: "both",
+        requestProtocol: form.requestProtocol,
       },
       {
         onSuccess: (response) => {

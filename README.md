@@ -112,6 +112,7 @@
 ### 9. 模型路由与本地运行
 
 - 支持 OpenAI、DeepSeek、SiliconFlow、xAI 等多提供商；规划、正文、审阅、拆书等链路可按任务拆开路由
+- 自定义厂商可填写 Base URL、API Key 和模型名称，也可从 `/v1/models` 自动获取；文本请求可选择 Responses API、Chat Completions 或 Anthropic Messages，并保留自动兼容模式
 - 默认 SQLite 即可跑通主链；需要 RAG 检索时再接入 Qdrant
 - RAG 并发数、限速等运行时参数从 .env 迁到设置面板，改完即生效无需重启
 - Monorepo 拆分（pnpm workspace），桌面版 / 介绍站 / 服务端 / 客户端独立可构建
@@ -140,12 +141,13 @@
 
 完整历史更新见 [docs/releases/release-notes.md](./docs/releases/release-notes.md)。
 
-### 2026-07-09（自动导演候选恢复更稳定）
+### 2026-07-15（Responses API 与 Chat Completions 双协议）
 
-恢复到已经生成书级方向候选的自动导演任务时，候选页会保留起始想法，可以直接选择方案、继续生成新一轮，或按意见修正方向。
+自定义模型厂商现在可以明确选择 Responses API 或 Chat Completions，也可以继续使用自动兼容模式；适合通过 CLIProxyAPI 等本地网关接入 OpenAI、Qwen、Kimi 等模型。
 
-- 从任务中心或恢复入口回到方向候选页后，系统会读取候选批次中的起始想法，避免页面有候选但继续操作时提示参数为空。
-- 如果任务记录确实缺少起始想法，页面会先提示补充想法，再继续生成或确认书级方向。
+- 厂商配置支持自定义 Base URL、API Key、模型名称和自动获取模型列表。
+- Responses API 支持普通生成、结构化输出和流式交互，并默认发送 `store: false`。
+- 模型路由可以继承厂商协议，也可以按任务单独覆盖；显式选择协议时不会静默切换到另一种协议。
 
 > 查看完整更新历史：[docs/releases/release-notes.md](./docs/releases/release-notes.md)
 
