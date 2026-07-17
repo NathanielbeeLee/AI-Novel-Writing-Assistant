@@ -195,17 +195,18 @@ async function testStructuredConnection(input: {
   requestProtocol?: ModelRouteRequestProtocol;
   structuredResponseFormat?: ModelRouteStructuredResponseFormat;
 }): Promise<LLMConnectivityStatus> {
-  const resolved = await resolveLLMClientOptions(input.provider, {
-    apiKey: input.apiKey,
-    baseURL: input.baseURL,
-    model: input.model,
-    temperature: 0.2,
-    maxTokens: 256,
-    requestProtocol: input.requestProtocol,
-    structuredStrategy: toStructuredOutputStrategy(input.structuredResponseFormat ?? "auto") ?? undefined,
-    executionMode: "plain",
-  });
+  let resolved: Awaited<ReturnType<typeof resolveLLMClientOptions>> | null = null;
   try {
+    resolved = await resolveLLMClientOptions(input.provider, {
+      apiKey: input.apiKey,
+      baseURL: input.baseURL,
+      model: input.model,
+      temperature: 0.2,
+      maxTokens: 256,
+      requestProtocol: input.requestProtocol,
+      structuredStrategy: toStructuredOutputStrategy(input.structuredResponseFormat ?? "auto") ?? undefined,
+      executionMode: "plain",
+    });
     const startedAt = Date.now();
     const result = await invokeStructuredLlmDetailed({
       provider: resolved.provider,
@@ -259,7 +260,7 @@ async function testStructuredConnection(input: {
       ok: false,
       latency: null,
       error: toErrorMessage(error),
-      requestProtocol: input.requestProtocol ?? resolved.requestProtocol,
+      requestProtocol: input.requestProtocol ?? resolved?.requestProtocol ?? null,
       strategy: null,
       reasoningForcedOff: false,
       fallbackAvailable: false,
@@ -270,8 +271,8 @@ async function testStructuredConnection(input: {
       profileFamily: null,
     };
     return {
-      provider: resolved.provider,
-      model: resolved.model,
+      provider: resolved?.provider ?? input.provider,
+      model: resolved?.model ?? input.model?.trim() ?? "",
       ok: structured.ok,
       latency: structured.latency,
       error: structured.error,

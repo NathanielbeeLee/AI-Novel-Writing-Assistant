@@ -191,7 +191,6 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.rag }),
       queryClient.invalidateQueries({ queryKey: queryKeys.llm.providers }),
       queryClient.invalidateQueries({ queryKey: queryKeys.settings.modelRoutes }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.settings.modelRouteConnectivity }),
     ]);
   };
 
