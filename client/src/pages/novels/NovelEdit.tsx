@@ -8,6 +8,7 @@ import type { AutoDirectorAction, AutoDirectorMutationActionCode } from "@ai-nov
 import type { DirectorBookAutomationAction, DirectorDashboardMode, DirectorTaskSnapshot } from "@ai-novel/shared/types/directorRuntime";
 import type { NovelExportDownloadFormat, NovelExportScope } from "@ai-novel/shared/types/novelExport";
 import type {
+  Chapter,
   PipelineRepairMode,
   PipelineRunMode,
   ReviewIssue,
@@ -2269,6 +2270,7 @@ export default function NovelEdit() {
     optimizeStructuredMutation,
     syncStructuredChaptersMutation,
     createChapterMutation,
+    deleteManualChapterMutation,
     runPipelineMutation,
     reviewMutation,
     hookMutation,
@@ -2291,6 +2293,7 @@ export default function NovelEdit() {
     pipelineForm,
     selectedChapterId,
     chapterCount: novelDetailQuery.data?.data?.chapters?.length ?? 0,
+    chapters,
     setActiveTab,
     setSelectedChapterId,
     setCurrentJobId,
@@ -2552,6 +2555,15 @@ export default function NovelEdit() {
     onGoToCharacterTab: goToCharacterTab,
     onCreateChapter: () => createChapterMutation.mutate(),
     isCreatingChapter: createChapterMutation.isPending,
+    onRemoveChapter: (chapter: Chapter) => {
+      const confirmed = window.confirm(`确认移除「第${chapter.order}章 ${chapter.title || "未命名章节"}」吗？该章节尚未开始写作，移除后不可恢复。`);
+      if (confirmed) {
+        deleteManualChapterMutation.mutate(chapter.id);
+      }
+    },
+    removingChapterId: deleteManualChapterMutation.isPending
+      ? deleteManualChapterMutation.variables ?? null
+      : null,
     chapterOperationMessage,
     strategy: chapterStrategy,
     onStrategyChange: (field: "runMode" | "wordSize" | "conflictLevel" | "pace" | "aiFreedom", value: string | number) =>
@@ -2822,3 +2834,4 @@ export default function NovelEdit() {
     />
   );
 }
+

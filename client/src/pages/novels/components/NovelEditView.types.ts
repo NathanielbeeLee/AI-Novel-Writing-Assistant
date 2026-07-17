@@ -319,6 +319,8 @@ export interface ChapterTabViewProps {
   onGoToCharacterTab: () => void;
   onCreateChapter: () => void;
   isCreatingChapter: boolean;
+  onRemoveChapter: (chapter: Chapter) => void;
+  removingChapterId?: string | null;
   chapterOperationMessage: string;
   strategy: {
     runMode: "fast" | "polish";
@@ -657,3 +659,4 @@ export interface NovelEditViewProps {
   taskDrawer?: NovelTaskDrawerState | null;
   activeStepTakeoverEntry?: ReactNode;
 }
+
