@@ -79,6 +79,14 @@
 
 This project must continuously maintain a development wiki for architecture decisions, workflow rules, module boundaries, runtime contracts, debugging lessons, and product design rationale.
 
+### Project Question Routing
+
+- For questions about this project's capabilities, workflows, failures, module ownership, or provenance, start from `docs/wiki/knowledge-graph/README.md`.
+- Use `docs/wiki/knowledge-graph/capability-catalog.md` to locate the product entrypoint, backend owner, persistent assets, and deeper documentation.
+- Use `docs/wiki/knowledge-graph/question-routing.md` to choose the narrowest relevant workflow or debugging evidence.
+- Use `docs/wiki/knowledge-graph/provenance.md` before claiming that a capability is upstream, fork-specific, or imported from another repository.
+- Treat the knowledge graph as a routing layer, not a substitute for current code, runtime state, database facts, or the specialist Wiki page.
+
 The wiki is not a record of "what changed". It should help future developers and AI agents understand why the system is designed this way and how it should be maintained.
 
 ### What Should Be Documented

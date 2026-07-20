@@ -69,6 +69,7 @@ Wiki 不替代计划、检查点或发布说明：
 - `docs/releases` 记录用户可见变化。
 
 - [Wiki Index](./wiki/README.md)
+- [项目知识图谱](./wiki/knowledge-graph/README.md)
 - [AI 小说创作工作台项目总手册](./wiki/project-handbook.md)
 - [Wiki Entry Template](./wiki/entry-template.md)
 - [Module Boundaries](./wiki/architecture/module-boundaries.md)
